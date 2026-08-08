@@ -1,93 +1,93 @@
 {
-  "name": "ai-workbench",
-  "displayName": "AI 工作台",
-  "description": "跨项目管理 AI Agent 会话的工作台",
-  "version": "0.1.0",
-  "publisher": "lhg",
-  "license": "MIT",
-  "engines": {
-    "vscode": "^1.95.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "main": "./dist/extension.js",
-  "activationEvents": [],
-  "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "aiWorkbench",
-          "title": "AI 工作台",
-          "icon": "media/icon.svg"
-        }
-      ]
+    "name": "ai-workbench",
+    "displayName": "AI 工作台",
+    "description": "跨项目管理 AI Agent 会话的工作台",
+    "version": "0.1.0",
+    "publisher": "lhg",
+    "license": "MIT",
+    "engines": {
+        "vscode": "^1.95.0"
     },
-    "views": {
-      "aiWorkbench": [
-        {
-          "id": "aiWorkbench.projects",
-          "name": "项目",
-          "icon": "media/icon.svg"
-        }
-      ]
-    },
-    "commands": [
-      {
-        "command": "aiWorkbench.openWorkbench",
-        "title": "AI 工作台：打开工作台"
-      },
-      {
-        "command": "aiWorkbench.addProject",
-        "title": "AI 工作台：添加项目",
-        "icon": "$(add)"
-      },
-      {
-        "command": "aiWorkbench.editProject",
-        "title": "AI 工作台：编辑项目",
-        "icon": "$(edit)"
-      },
-      {
-        "command": "aiWorkbench.removeProject",
-        "title": "AI 工作台：删除项目",
-        "icon": "$(trash)"
-      }
+    "categories": [
+        "Other"
     ],
-    "menus": {
-      "view/title": [
-        {
-          "command": "aiWorkbench.addProject",
-          "when": "view == aiWorkbench.projects",
-          "group": "navigation"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "aiWorkbench.editProject",
-          "when": "view == aiWorkbench.projects && viewItem == project",
-          "group": "inline"
+    "main": "./dist/extension.js",
+    "activationEvents": [],
+    "contributes": {
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "aiWorkbench",
+                    "title": "AI 工作台",
+                    "icon": "media/icon.svg"
+                }
+            ]
         },
-        {
-          "command": "aiWorkbench.removeProject",
-          "when": "view == aiWorkbench.projects && viewItem == project",
-          "group": "inline"
+        "views": {
+            "aiWorkbench": [
+                {
+                    "id": "aiWorkbench.projects",
+                    "name": "项目",
+                    "icon": "media/icon.svg"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "aiWorkbench.openWorkbench",
+                "title": "AI 工作台：打开工作台"
+            },
+            {
+                "command": "aiWorkbench.addProject",
+                "title": "AI 工作台：添加项目",
+                "icon": "$(add)"
+            },
+            {
+                "command": "aiWorkbench.editProject",
+                "title": "AI 工作台：编辑项目",
+                "icon": "$(edit)"
+            },
+            {
+                "command": "aiWorkbench.removeProject",
+                "title": "AI 工作台：删除项目",
+                "icon": "$(trash)"
+            }
+        ],
+        "menus": {
+            "view/title": [
+                {
+                    "command": "aiWorkbench.addProject",
+                    "when": "view == aiWorkbench.projects",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "aiWorkbench.editProject",
+                    "when": "view == aiWorkbench.projects && viewItem == project",
+                    "group": "inline"
+                },
+                {
+                    "command": "aiWorkbench.removeProject",
+                    "when": "view == aiWorkbench.projects && viewItem == project",
+                    "group": "inline"
+                }
+            ]
         }
-      ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run build",
+        "build": "node esbuild.mjs --production",
+        "watch": "node esbuild.mjs --watch",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest"
+    },
+    "devDependencies": {
+        "@types/node": "^24.0.0",
+        "@types/vscode": "^1.95.0",
+        "esbuild": "^0.25.0",
+        "typescript": "^5.7.0",
+        "vitest": "^3.0.0"
     }
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run build",
-    "build": "node esbuild.mjs --production",
-    "watch": "node esbuild.mjs --watch",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "devDependencies": {
-    "@types/node": "^24.0.0",
-    "@types/vscode": "^1.95.0",
-    "esbuild": "^0.25.0",
-    "typescript": "^5.7.0",
-    "vitest": "^3.0.0"
-  }
 }
