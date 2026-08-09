@@ -30,6 +30,8 @@ Feature: ai-workbench
 15. 作为开发者，我想同时打开多个项目（多根工作区），以便同时处理多个项目而无需切换或重载窗口。
 16. 作为开发者，我想在工作台添加/移除项目时动态同步当前工作区，以便项目增减即时生效、不重载窗口。
 17. 作为开发者，我想工作区文件夹增删（含 VS Code 原生操作）时工作台自动刷新，以便视图始终与工作区一致。
+18. 作为开发者，我想通过引导面板选择父目录、勾选其子文件夹作为项目，一键创建多根工作区并在当前窗口打开，以便快速开始多项目管理。
+19. 作为开发者，我想在工作区文件已存在时直接加载，或二次确认后覆盖重建，以便反复进入同一组项目。
 
 ## 实现决策
 
@@ -40,6 +42,7 @@ Feature: ai-workbench
   - `SessionMatching`：按会话工作目录与工作区项目文件夹匹配（精确或子目录），决定会话归属；无「未归属」概念，不匹配的会话不展示。
   - `SearchService`：按标题与消息文本搜索、按项目/Agent/时间过滤。
 - **项目管理（工作区驱动）**：添加项目 = `workspace.updateWorkspaceFolders` 动态加入文件夹；移除项目 = 从工作区移除文件夹（均**不重载窗口**）；监听 `onDidChangeWorkspaceFolders` 自动刷新树；名称 = 文件夹名（不提供重命名），标签按路径存 globalStorage JSON。
+- **多根工作区引导面板（Webview，编辑器区居中）**：选父目录 → 列出子文件夹可勾选 → 工作区文件名默认 `<父目录名>.code-workspace`（可输入修改）→ 确认后生成文件并在当前窗口打开（`vscode.openFolder`）；目标已存在则直接加载，「覆盖重建」需二次确认。纯逻辑（文件名、JSON 生成、子目录列举、HTML 构建）抽为可测函数；面板分区结构，为后续默认 Agent / key 配置预留。入口：命令 + 视图标题栏按钮（不自动弹出）。
 - **Provider 接口（Agent 适配层）**：
   - `AgentProvider` 接口：`discoverStore()`、`scanSessions()`、`readSessionContent()`、`resumeSession()`。
   - `PiProvider`（v1 唯一实现）：按 `pi` 的存储约定扫描 `~/.pi/agent/sessions/`，解析 JSONL（含版本头，容忍版本迁移），通过 `pi --resume <file>` 继续会话。

@@ -66,6 +66,11 @@
                 "command": "aiWorkbench.refresh",
                 "title": "AI 工作台：刷新",
                 "icon": "$(refresh)"
+            },
+            {
+                "command": "aiWorkbench.createWorkspace",
+                "title": "AI 工作台：创建多根工作区",
+                "icon": "$(workspace-untrusted)"
             }
         ],
         "menus": {
@@ -87,6 +92,11 @@
                 },
                 {
                     "command": "aiWorkbench.refresh",
+                    "when": "view == aiWorkbench.projects",
+                    "group": "navigation"
+                },
+                {
+                    "command": "aiWorkbench.createWorkspace",
                     "when": "view == aiWorkbench.projects",
                     "group": "navigation"
                 }

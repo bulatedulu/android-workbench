@@ -1,14 +1,7 @@
 import { Session, SessionContent } from '../domain/session';
 import { AgentProvider } from '../agent/provider';
 import { formatTime } from './format';
-
-function escapeHtml(s: string): string {
-    return s
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-}
+import { escapeHtml } from './html';
 
 /**
  * 处理查看器发来的消息：收到 resume 时通过注入的 run 恢复会话。

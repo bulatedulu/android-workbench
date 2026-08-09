@@ -9,6 +9,7 @@ import { WorkbenchTreeProvider } from './ui/workbenchTree';
 import { registerProjectCommands } from './ui/commands';
 import { registerSearchCommands } from './ui/searchCommands';
 import { showSessionViewer } from './ui/sessionViewer';
+import { openWorkspaceWizard } from './ui/workspaceWizard';
 import { statusMessage } from './ui/messages';
 
 /** 根据 pi 存储与命令可用性，设置树视图的空态消息。 */
@@ -34,6 +35,9 @@ export function activate(context: vscode.ExtensionContext): void {
         }),
         vscode.commands.registerCommand('aiWorkbench.openSession', (session: Session) => {
             showSessionViewer(context, session, provider);
+        }),
+        vscode.commands.registerCommand('aiWorkbench.createWorkspace', () => {
+            openWorkspaceWizard(context);
         }),
         vscode.commands.registerCommand('aiWorkbench.refresh', () => {
             tree.refresh(); // WorkbenchTreeProvider.refresh 内部已清会话缓存
