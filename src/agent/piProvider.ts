@@ -9,16 +9,23 @@ const MAX_TITLE = 50;
 /**
  * pi 会话提供者：扫描 ~/.pi/agent/sessions 下的 JSONL 文件。
  * 读取走直接解析 JSONL（含版本头，容忍版本迁移），绝不修改 pi 的存储（见 ADR-0001）。
- * storeRoot 可注入，便于测试用临时目录。
+ * storeRoot 可注入，便于测试用临时目录；commandExists 可注入，便于测试可用性判断。
  */
 export class PiProvider implements AgentProvider {
     readonly agentName = 'pi';
 
-    constructor(private readonly storeRoot?: string) { }
+    constructor(
+        private readonly storeRoot?: string,
+        private readonly commandExists: (command: string) => boolean = commandExistsOnPath
+    ) {}
 
     discoverStore(): string | undefined {
         const root = this.storeRoot ?? path.join(os.homedir(), '.pi', 'agent', 'sessions');
         return fs.existsSync(root) ? root : undefined;
+    }
+
+    isAvailable(): boolean {
+        return this.commandExists('pi');
     }
 
     scanSessions(): Session[] {
@@ -65,9 +72,9 @@ export class PiProvider implements AgentProvider {
         return { messages };
     }
 
-    resumeSession(session: Session, run: (command: string) => void): void {
+    resumeSession(session: Session, run: (command: string) => boolean): boolean {
         const escaped = session.path.replace(/"/g, '\\"');
-        run(`pi --resume "${escaped}"`);
+        return run(`pi --resume "${escaped}"`);
     }
 }
 
@@ -109,6 +116,30 @@ function findJsonlFiles(root: string): string[] {
     return files;
 }
 
+/** 在 PATH 中查找命令是否存在（Windows 按 PATHEXT 尝试扩展名）。 */
+function commandExistsOnPath(command: string): boolean {
+    const pathEnv = process.env.PATH ?? '';
+    const extensions = process.platform === 'win32'
+        ? (process.env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD')
+              .split(';')
+              .map((e) => e.toLowerCase())
+              .filter(Boolean)
+        : [''];
+    const dirs = pathEnv.split(path.delimiter).filter(Boolean);
+    for (const dir of dirs) {
+        for (const ext of extensions) {
+            try {
+                if (fs.statSync(path.join(dir, command + ext)).isFile()) {
+                    return true;
+                }
+            } catch {
+                // 目录不存在或不是文件，继续查找
+            }
+        }
+    }
+    return false;
+}
+
 /** 解析单个 pi 会话文件；文件不可读或无有效头部时返回 undefined。 */
 function parseSessionFile(filePath: string): Session | undefined {
     let content: string;
@@ -123,20 +154,24 @@ function parseSessionFile(filePath: string): Session | undefined {
     let timestamp: string | undefined;
     let title: string | undefined;
     let model: string | undefined;
+    let lastMessageTs: number | undefined;
 
-    // 扫描完整文件：标题取首个用户消息，模型取最后出现的模型信息。
+    // 扫描完整文件：标题取首个用户消息，模型取最后出现的模型信息，更新时间取最后一条消息。
     forEachJsonLine(content, (obj) => {
         if (obj.type === 'session') {
             id = String(obj.id ?? '');
             cwd = typeof obj.cwd === 'string' ? obj.cwd : undefined;
             timestamp = typeof obj.timestamp === 'string' ? obj.timestamp : undefined;
         } else if (obj.type === 'message') {
-            const message = obj.message as { role?: string; content?: unknown; model?: string } | undefined;
+            const message = obj.message as { role?: string; content?: unknown; model?: string; timestamp?: number } | undefined;
             if (message?.role === 'user' && title === undefined) {
                 title = extractText(message.content);
             }
             if (typeof message?.model === 'string') {
                 model = message.model;
+            }
+            if (typeof message?.timestamp === 'number' && (lastMessageTs === undefined || message.timestamp > lastMessageTs)) {
+                lastMessageTs = message.timestamp;
             }
         } else if (obj.type === 'model_change') {
             if (typeof obj.modelId === 'string') {
@@ -166,7 +201,8 @@ function parseSessionFile(filePath: string): Session | undefined {
         cwd: cwd ?? '',
         title: title ?? '无标题会话',
         model: model ?? undefined,
-        createdAt
+        createdAt,
+        updatedAt: lastMessageTs ?? createdAt
     };
 }
 

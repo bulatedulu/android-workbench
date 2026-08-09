@@ -14,6 +14,8 @@ export interface AgentProvider {
     readSessionText(session: Session): string;
     /** 读取会话的结构化内容（消息序列，供查看器渲染）。 */
     readSessionContent(session: Session): SessionContent;
-    /** 在 Agent 中恢复/继续该会话：构造命令并通过注入的 runner 执行。 */
-    resumeSession(session: Session, run: (command: string) => void): void;
+    /** 在 Agent 中恢复/继续该会话：构造命令并通过注入的 runner 执行，返回是否成功启动。 */
+    resumeSession(session: Session, run: (command: string) => boolean): boolean;
+    /** Agent 的命令是否可用（用于恢复会话前的提示）。 */
+    isAvailable(): boolean;
 }

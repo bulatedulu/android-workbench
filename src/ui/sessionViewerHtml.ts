@@ -13,17 +13,16 @@ function escapeHtml(s: string): string {
 /**
  * 处理查看器发来的消息：收到 resume 时通过注入的 run 恢复会话。
  * 纯函数（不依赖 VS Code），便于行为级测试。
- * @returns 是否处理了该消息
+ * @returns 恢复是否成功启动（run 的返回值）
  */
 export function handleViewerMessage(
     message: unknown,
     session: Session,
     provider: AgentProvider,
-    run: (command: string) => void
+    run: (command: string) => boolean
 ): boolean {
     if (message && typeof message === 'object' && (message as { type?: unknown }).type === 'resume') {
-        provider.resumeSession(session, run);
-        return true;
+        return provider.resumeSession(session, run);
     }
     return false;
 }

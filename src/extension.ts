@@ -9,6 +9,7 @@ import { WorkbenchTreeProvider } from './ui/workbenchTree';
 import { registerProjectCommands } from './ui/commands';
 import { registerSearchCommands } from './ui/searchCommands';
 import { showSessionViewer } from './ui/sessionViewer';
+import { statusMessage } from './ui/messages';
 
 /**
  * 以 globalStorage 下的 JSON 文件为后端的 ProjectStore 实现（符合规范决策）。
@@ -36,6 +37,11 @@ class GlobalStorageProjectStore implements ProjectStore {
     }
 }
 
+/** 根据 pi 存储与命令可用性，设置树视图的空态消息。 */
+function updateViewMessage(view: vscode.TreeView<unknown>, service: WorkbenchService): void {
+    view.message = statusMessage(service.hasStore(), service.agentAvailable);
+}
+
 export function activate(context: vscode.ExtensionContext): void {
     const store = new GlobalStorageProjectStore(context);
     const registry = new ProjectRegistry(store);
@@ -44,9 +50,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const tree = new WorkbenchTreeProvider(service);
 
     const view = vscode.window.createTreeView('aiWorkbench.projects', { treeDataProvider: tree });
-    if (!service.hasStore()) {
-        view.message = '未找到 pi 会话存储（~/.pi/agent/sessions）。请先安装并运行 pi。';
-    }
+    updateViewMessage(view, service);
     context.subscriptions.push(
         view,
         vscode.commands.registerCommand('aiWorkbench.openWorkbench', () => {
@@ -54,6 +58,16 @@ export function activate(context: vscode.ExtensionContext): void {
         }),
         vscode.commands.registerCommand('aiWorkbench.openSession', (session: Session) => {
             showSessionViewer(context, session, provider);
+        }),
+        vscode.commands.registerCommand('aiWorkbench.refresh', () => {
+            tree.refresh(); // WorkbenchTreeProvider.refresh 内部已清会话缓存
+            updateViewMessage(view, service);
+            const status = statusMessage(service.hasStore(), service.agentAvailable);
+            if (status) {
+                void vscode.window.showErrorMessage(status);
+            } else {
+                void vscode.window.showInformationMessage('已刷新');
+            }
         })
     );
 

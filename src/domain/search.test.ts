@@ -3,6 +3,7 @@ import { SearchService } from './search';
 import { Session } from './session';
 
 function makeSession(id: string, opts?: { title?: string; agent?: string; createdAt?: number }): Session {
+    const createdAt = opts?.createdAt ?? 1000;
     return {
         id,
         agent: opts?.agent ?? 'pi',
@@ -10,7 +11,8 @@ function makeSession(id: string, opts?: { title?: string; agent?: string; create
         cwd: 'D:\\x',
         title: opts?.title ?? `会话${id}`,
         model: 'm',
-        createdAt: opts?.createdAt ?? 1000
+        createdAt,
+        updatedAt: createdAt
     };
 }
 

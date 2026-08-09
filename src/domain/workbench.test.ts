@@ -29,11 +29,16 @@ class FakeProvider implements AgentProvider {
     readSessionContent(session: Session): SessionContent {
         return { messages: [] };
     }
-    resumeSession(_session: Session, _run: (command: string) => void): void { }
+    resumeSession(_session: Session, _run: (command: string) => boolean): boolean {
+        return true;
+    }
+    isAvailable(): boolean {
+        return true;
+    }
 }
 
 function makeSession(id: string, cwd: string): Session {
-    return { id, agent: 'pi', path: `/sessions/${id}.jsonl`, cwd, title: id, model: 'gpt-4.1', createdAt: 1 };
+    return { id, agent: 'pi', path: `/sessions/${id}.jsonl`, cwd, title: id, model: 'gpt-4.1', createdAt: 1, updatedAt: 1 };
 }
 
 describe('WorkbenchService', () => {
@@ -63,7 +68,8 @@ describe('WorkbenchService', () => {
             },
             readSessionText: () => '',
             readSessionContent: () => ({ messages: [] }),
-            resumeSession: () => undefined
+            resumeSession: () => true,
+            isAvailable: () => true
         };
         const registry = new ProjectRegistry(new MemoryStore());
         const project = registry.add({ name: 'BUG-1', path: 'D:\\bug_list\\BUG-1' });

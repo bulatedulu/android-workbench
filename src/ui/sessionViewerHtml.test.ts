@@ -10,7 +10,8 @@ const SESSION: Session = {
     cwd: 'D:\\x',
     title: 't',
     model: 'm',
-    createdAt: 1
+    createdAt: 1,
+    updatedAt: 1
 };
 
 function makeProvider(): AgentProvider {
@@ -20,7 +21,8 @@ function makeProvider(): AgentProvider {
         scanSessions: () => [],
         readSessionText: () => '',
         readSessionContent: () => ({ messages: [] }),
-        resumeSession: (s, run) => run(`pi --resume "${s.path}"`)
+        resumeSession: (s, run) => run(`pi --resume "${s.path}"`),
+        isAvailable: () => true
     };
 }
 
@@ -29,14 +31,20 @@ describe('handleViewerMessage', () => {
         let captured: string | undefined;
         const handled = handleViewerMessage({ type: 'resume' }, SESSION, makeProvider(), (cmd) => {
             captured = cmd;
+            return true;
         });
         expect(handled).toBe(true);
         expect(captured).toContain('pi --resume');
         expect(captured).toContain('C:\\sessions\\demo.jsonl');
     });
 
+    it('runner 返回 false 时视为恢复未启动', () => {
+        const handled = handleViewerMessage({ type: 'resume' }, SESSION, makeProvider(), () => false);
+        expect(handled).toBe(false);
+    });
+
     it('非 resume 消息被忽略并返回 false', () => {
-        const handled = handleViewerMessage({ type: 'other' }, SESSION, makeProvider(), () => { });
+        const handled = handleViewerMessage({ type: 'other' }, SESSION, makeProvider(), () => false);
         expect(handled).toBe(false);
     });
 });

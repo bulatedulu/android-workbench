@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { Session } from '../domain/session';
 import { AgentProvider } from '../agent/provider';
 import { buildHtml, handleViewerMessage } from './sessionViewerHtml';
+import { NO_COMMAND_MESSAGE, RESUME_SUCCESS_MESSAGE } from './messages';
 
 /**
  * 打开会话查看器（Webview）：
@@ -28,14 +29,19 @@ export function showSessionViewer(
             if (resumed) {
                 return;
             }
-            const handled = handleViewerMessage(message, session, provider, (command) => {
+            const launched = handleViewerMessage(message, session, provider, (command) => {
+                if (!provider.isAvailable()) {
+                    void vscode.window.showErrorMessage(NO_COMMAND_MESSAGE);
+                    return false;
+                }
                 const terminal = vscode.window.createTerminal({ name: `pi: ${session.title}` });
                 terminal.show();
                 terminal.sendText(command);
+                return true;
             });
-            if (handled) {
+            if (launched) {
                 resumed = true;
-                void vscode.window.showInformationMessage('已在集成终端恢复该会话，请到终端继续对话。');
+                void vscode.window.showInformationMessage(RESUME_SUCCESS_MESSAGE);
             }
         },
         undefined,

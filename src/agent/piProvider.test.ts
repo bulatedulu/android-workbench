@@ -52,6 +52,7 @@ describe('PiProvider', () => {
         expect(sessions[0].model).toBe('gpt-4.1');
         expect(sessions[0].path).toBe(file);
         expect(sessions[0].createdAt).toBe(Date.parse('2026-08-08T22:01:29.153Z'));
+        expect(sessions[0].updatedAt).toBe(1786226510762); // 最后一条消息时间戳
     });
 
     it('跨多个子目录递归发现会话', () => {
@@ -138,7 +139,7 @@ describe('PiProvider', () => {
 
     it('readSessionText 对不可读文件返回空字符串', () => {
         const provider = new PiProvider(makeStore());
-        expect(provider.readSessionText({ id: 'x', agent: 'pi', path: path.join(os.tmpdir(), 'no-such.jsonl'), cwd: '', title: '', model: undefined, createdAt: 0 })).toBe('');
+        expect(provider.readSessionText({ id: 'x', agent: 'pi', path: path.join(os.tmpdir(), 'no-such.jsonl'), cwd: '', title: '', model: undefined, createdAt: 0, updatedAt: 0 })).toBe('');
     });
 
     it('readSessionText 不截断长消息（后部关键词可命中）', () => {
@@ -180,7 +181,7 @@ describe('PiProvider', () => {
 
     it('readSessionContent 对不可读文件返回空消息序列', () => {
         const provider = new PiProvider(makeStore());
-        const content = provider.readSessionContent({ id: 'x', agent: 'pi', path: path.join(os.tmpdir(), 'no-such.jsonl'), cwd: '', title: '', model: undefined, createdAt: 0 });
+        const content = provider.readSessionContent({ id: 'x', agent: 'pi', path: path.join(os.tmpdir(), 'no-such.jsonl'), cwd: '', title: '', model: undefined, createdAt: 0, updatedAt: 0 });
         expect(content.messages).toEqual([]);
     });
 
@@ -191,11 +192,18 @@ describe('PiProvider', () => {
         const session = provider.scanSessions()[0];
 
         let captured: string | undefined;
-        provider.resumeSession(session, (cmd) => {
+        const launched = provider.resumeSession(session, (cmd) => {
             captured = cmd;
+            return true;
         });
 
+        expect(launched).toBe(true);
         expect(captured).toContain('pi --resume');
         expect(captured).toContain(file);
+    });
+
+    it('isAvailable 依据注入的 commandExists', () => {
+        expect(new PiProvider(makeStore(), () => true).isAvailable()).toBe(true);
+        expect(new PiProvider(makeStore(), () => false).isAvailable()).toBe(false);
     });
 });

@@ -24,6 +24,10 @@ export class WorkbenchService {
         return this.provider.agentName;
     }
 
+    get agentAvailable(): boolean {
+        return this.provider.isAvailable();
+    }
+
     get isSearching(): boolean {
         return (
             this.query.trim() !== '' ||

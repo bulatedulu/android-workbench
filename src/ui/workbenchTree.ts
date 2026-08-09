@@ -64,9 +64,12 @@ export class WorkbenchTreeProvider implements vscode.TreeDataProvider<TreeNode> 
         // Session
         const item = new vscode.TreeItem(element.title, vscode.TreeItemCollapsibleState.None);
         item.description = element.model
-            ? `${element.model} · ${formatTime(element.createdAt)}`
-            : formatTime(element.createdAt);
-        item.tooltip = `${element.title}\n${element.cwd}${element.model ? `\n${element.model}` : ''}`;
+            ? `${element.model} · ${formatTime(element.updatedAt)}`
+            : formatTime(element.updatedAt);
+        item.tooltip =
+            `${element.title}\n${element.cwd}` +
+            `\n创建：${formatTime(element.createdAt)}\n更新：${formatTime(element.updatedAt)}` +
+            (element.model ? `\n模型：${element.model}` : '');
         item.contextValue = 'session';
         item.command = { command: 'aiWorkbench.openSession', title: '查看会话', arguments: [element] };
         return item;

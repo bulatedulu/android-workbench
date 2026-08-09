@@ -11,6 +11,8 @@ export interface Session {
     readonly title: string;
     readonly model: string | undefined;
     readonly createdAt: number;
+    /** 最后更新时间（来自最后一条消息时间戳，回退为 createdAt） */
+    readonly updatedAt: number;
 }
 
 /** 会话中的一条消息（供查看器渲染）。 */
