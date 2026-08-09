@@ -5,12 +5,12 @@ import { WorkbenchService } from '../domain/workbench';
 
 /** Agent 层级节点：持有其已归属会话（getChildren 需要上下文）。 */
 export class AgentNode {
-    constructor(readonly agent: string, readonly sessions: Session[]) {}
+    constructor(readonly agent: string, readonly sessions: Session[]) { }
 }
 
 /** 空态占位节点。 */
 export class PlaceholderNode {
-    constructor(readonly label: string) {}
+    constructor(readonly label: string) { }
 }
 
 export type TreeNode = Project | AgentNode | Session | PlaceholderNode;
@@ -35,7 +35,7 @@ export class WorkbenchTreeProvider implements vscode.TreeDataProvider<TreeNode> 
     private readonly _onDidChangeTreeData = new vscode.EventEmitter<TreeNode | undefined | void>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-    constructor(private readonly service: WorkbenchService) {}
+    constructor(private readonly service: WorkbenchService) { }
 
     refresh(): void {
         this.service.refresh();
@@ -75,10 +75,14 @@ export class WorkbenchTreeProvider implements vscode.TreeDataProvider<TreeNode> 
             return this.service.listProjects();
         }
         if (isProject(element)) {
-            const sessions = this.service.listSessionsForProject(element);
-            if (sessions.length === 0) {
+            const all = this.service.listAllSessionsForProject(element);
+            if (all.length === 0) {
                 const label = this.service.hasStore() ? '无会话' : '未找到 pi 会话存储';
                 return [new PlaceholderNode(label)];
+            }
+            const sessions = this.service.listSessionsForProject(element);
+            if (sessions.length === 0) {
+                return [new PlaceholderNode('无匹配会话')];
             }
             return [new AgentNode(this.service.agentName, sessions)];
         }

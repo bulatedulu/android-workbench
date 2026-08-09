@@ -51,12 +51,32 @@
                 "command": "aiWorkbench.removeProject",
                 "title": "AI 工作台：删除项目",
                 "icon": "$(trash)"
+            },
+            {
+                "command": "aiWorkbench.searchSessions",
+                "title": "AI 工作台：搜索会话",
+                "icon": "$(search)"
+            },
+            {
+                "command": "aiWorkbench.clearSearch",
+                "title": "AI 工作台：清除搜索",
+                "icon": "$(close)"
             }
         ],
         "menus": {
             "view/title": [
                 {
                     "command": "aiWorkbench.addProject",
+                    "when": "view == aiWorkbench.projects",
+                    "group": "navigation"
+                },
+                {
+                    "command": "aiWorkbench.searchSessions",
+                    "when": "view == aiWorkbench.projects",
+                    "group": "navigation"
+                },
+                {
+                    "command": "aiWorkbench.clearSearch",
                     "when": "view == aiWorkbench.projects",
                     "group": "navigation"
                 }

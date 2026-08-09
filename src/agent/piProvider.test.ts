@@ -114,4 +114,51 @@ describe('PiProvider', () => {
         expect(sessions[0].title.length).toBeLessThan(60);
         expect(sessions[0].title.endsWith('…')).toBe(true);
     });
+
+    it('readSessionText 返回全部消息文本', () => {
+        const root = makeStore();
+        const lines = realFormatLines('D:\\a', { title: '你好', model: 'gpt-4.1' });
+        lines.push(
+            JSON.stringify({
+                type: 'message',
+                id: 'msg3',
+                parentId: 'msg2',
+                timestamp: '2026-08-08T22:02:00.000Z',
+                message: { role: 'assistant', content: [{ type: 'text', text: '这是回复内容' }], model: 'gpt-4.1', timestamp: 1786226520000 }
+            })
+        );
+        writeSession(root, '--A--', lines);
+
+        const provider = new PiProvider(root);
+        const sessions = provider.scanSessions();
+
+        expect(provider.readSessionText(sessions[0])).toContain('你好');
+        expect(provider.readSessionText(sessions[0])).toContain('这是回复内容');
+    });
+
+    it('readSessionText 对不可读文件返回空字符串', () => {
+        const provider = new PiProvider(makeStore());
+        expect(provider.readSessionText({ id: 'x', agent: 'pi', path: path.join(os.tmpdir(), 'no-such.jsonl'), cwd: '', title: '', model: undefined, createdAt: 0 })).toBe('');
+    });
+
+    it('readSessionText 不截断长消息（后部关键词可命中）', () => {
+        const root = makeStore();
+        const lines = realFormatLines('D:\\a', { title: 't' });
+        const long = '前缀' + '字'.repeat(80) + '关键目标词';
+        lines.push(
+            JSON.stringify({
+                type: 'message',
+                id: 'msg-late',
+                parentId: 'x',
+                timestamp: '2026-08-08T22:03:00.000Z',
+                message: { role: 'user', content: [{ type: 'text', text: long }], timestamp: 1786226580000 }
+            })
+        );
+        writeSession(root, '--A--', lines);
+
+        const provider = new PiProvider(root);
+        const sessions = provider.scanSessions();
+
+        expect(provider.readSessionText(sessions[0])).toContain('关键目标词');
+    });
 });

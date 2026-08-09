@@ -16,12 +16,15 @@ class MemoryStore implements ProjectStore {
 
 class FakeProvider implements AgentProvider {
     readonly agentName = 'pi';
-    constructor(private readonly sessions: Session[]) {}
+    constructor(private readonly sessions: Session[]) { }
     discoverStore(): string | undefined {
         return '/fake/store';
     }
     scanSessions(): Session[] {
         return this.sessions;
+    }
+    readSessionText(session: Session): string {
+        return `text-${session.id}`;
     }
 }
 
@@ -53,7 +56,8 @@ describe('WorkbenchService', () => {
             scanSessions: () => {
                 scanCount++;
                 return [makeSession('a', 'D:\\bug_list\\BUG-1')];
-            }
+            },
+            readSessionText: () => ''
         };
         const registry = new ProjectRegistry(new MemoryStore());
         const project = registry.add({ name: 'BUG-1', path: 'D:\\bug_list\\BUG-1' });
@@ -72,5 +76,31 @@ describe('WorkbenchService', () => {
         const registry = new ProjectRegistry(new MemoryStore());
         const service = new WorkbenchService(registry, new FakeProvider([]));
         expect(service.agentName).toBe('pi');
+    });
+
+    it('setSearch 后只返回匹配的会话，clearSearch 恢复全部', () => {
+        const registry = new ProjectRegistry(new MemoryStore());
+        const project = registry.add({ name: 'BUG-1', path: 'D:\\bug_list\\BUG-1' });
+        const sessions = [makeSession('a', 'D:\\bug_list\\BUG-1'), makeSession('b', 'D:\\bug_list\\BUG-1')];
+        const service = new WorkbenchService(registry, new FakeProvider(sessions));
+
+        service.setSearch('text-a');
+        expect(service.isSearching).toBe(true);
+        expect(service.listSessionsForProject(project).map((s) => s.id)).toEqual(['a']);
+
+        service.clearSearch();
+        expect(service.isSearching).toBe(false);
+        expect(service.listSessionsForProject(project)).toHaveLength(2);
+    });
+
+    it('listAllSessionsForProject 不受搜索影响', () => {
+        const registry = new ProjectRegistry(new MemoryStore());
+        const project = registry.add({ name: 'BUG-1', path: 'D:\\bug_list\\BUG-1' });
+        const sessions = [makeSession('a', 'D:\\bug_list\\BUG-1'), makeSession('b', 'D:\\bug_list\\BUG-1')];
+        const service = new WorkbenchService(registry, new FakeProvider(sessions));
+
+        service.setSearch('text-a');
+        expect(service.listAllSessionsForProject(project)).toHaveLength(2);
+        expect(service.listSessionsForProject(project)).toHaveLength(1);
     });
 });

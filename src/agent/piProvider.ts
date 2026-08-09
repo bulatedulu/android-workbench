@@ -14,7 +14,7 @@ const MAX_TITLE = 50;
 export class PiProvider implements AgentProvider {
     readonly agentName = 'pi';
 
-    constructor(private readonly storeRoot?: string) {}
+    constructor(private readonly storeRoot?: string) { }
 
     discoverStore(): string | undefined {
         const root = this.storeRoot ?? path.join(os.homedir(), '.pi', 'agent', 'sessions');
@@ -34,6 +34,43 @@ export class PiProvider implements AgentProvider {
             }
         }
         return sessions;
+    }
+
+    readSessionText(session: Session): string {
+        let content: string;
+        try {
+            content = fs.readFileSync(session.path, 'utf8');
+        } catch {
+            return '';
+        }
+        const parts: string[] = [];
+        forEachJsonLine(content, (obj) => {
+            if (obj.type === 'message') {
+                const message = obj.message as { content?: unknown } | undefined;
+                // 搜索需要完整文本，不截断
+                const text = extractText(message?.content, false);
+                if (text) {
+                    parts.push(text);
+                }
+            }
+        });
+        return parts.join('\n');
+    }
+}
+
+/** 逐行解析 JSONL，跳过空行与损坏行。 */
+function forEachJsonLine(content: string, visit: (obj: Record<string, unknown>) => void): void {
+    for (const line of content.split(/\r?\n/)) {
+        if (!line.trim()) {
+            continue;
+        }
+        let obj: Record<string, unknown>;
+        try {
+            obj = JSON.parse(line) as Record<string, unknown>;
+        } catch {
+            continue; // 容忍个别损坏行
+        }
+        visit(obj);
     }
 }
 
@@ -75,16 +112,7 @@ function parseSessionFile(filePath: string): Session | undefined {
     let model: string | undefined;
 
     // 扫描完整文件：标题取首个用户消息，模型取最后出现的模型信息。
-    for (const line of content.split(/\r?\n/)) {
-        if (!line.trim()) {
-            continue;
-        }
-        let obj: Record<string, unknown>;
-        try {
-            obj = JSON.parse(line) as Record<string, unknown>;
-        } catch {
-            continue; // 容忍个别损坏行
-        }
+    forEachJsonLine(content, (obj) => {
         if (obj.type === 'session') {
             id = String(obj.id ?? '');
             cwd = typeof obj.cwd === 'string' ? obj.cwd : undefined;
@@ -102,7 +130,7 @@ function parseSessionFile(filePath: string): Session | undefined {
                 model = obj.modelId;
             }
         }
-    }
+    });
 
     if (!id) {
         return undefined;
@@ -129,7 +157,7 @@ function parseSessionFile(filePath: string): Session | undefined {
     };
 }
 
-function extractText(content: unknown): string | undefined {
+function extractText(content: unknown, truncate = true): string | undefined {
     let text: string | undefined;
     if (typeof content === 'string') {
         // 兼容旧版 pi：content 可能是纯字符串
@@ -145,5 +173,5 @@ function extractText(content: unknown): string | undefined {
     if (!text) {
         return undefined;
     }
-    return text.length > MAX_TITLE ? text.slice(0, MAX_TITLE) + '…' : text;
+    return truncate && text.length > MAX_TITLE ? text.slice(0, MAX_TITLE) + '…' : text;
 }

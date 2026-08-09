@@ -10,4 +10,6 @@ export interface AgentProvider {
     discoverStore(): string | undefined;
     /** 扫描存储，返回全部会话的元数据（内容按需读取）。 */
     scanSessions(): Session[];
+    /** 读取会话的全部消息文本（用于搜索），失败时返回空字符串。 */
+    readSessionText(session: Session): string;
 }

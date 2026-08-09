@@ -6,6 +6,7 @@ import { WorkbenchService } from './domain/workbench';
 import { PiProvider } from './agent/piProvider';
 import { WorkbenchTreeProvider } from './ui/workbenchTree';
 import { registerProjectCommands } from './ui/commands';
+import { registerSearchCommands } from './ui/searchCommands';
 
 /**
  * 以 globalStorage 下的 JSON 文件为后端的 ProjectStore 实现（符合规范决策）。
@@ -51,6 +52,7 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 
     registerProjectCommands(context, registry, tree);
+    registerSearchCommands(context, service, tree);
 }
 
 export function deactivate(): void { }
