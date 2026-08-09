@@ -7,7 +7,7 @@ import { AgentProvider } from '../agent/provider';
 class FakeProjects implements ProjectSource {
     private tagMap: Record<string, string[]> = {};
 
-    constructor(private readonly projects: Project[]) {}
+    constructor(private readonly projects: Project[]) { }
 
     listProjects(): Project[] {
         return this.projects.map((p) => ({ ...p, tags: [...(this.tagMap[p.path] ?? p.tags)] }));

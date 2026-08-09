@@ -14,18 +14,10 @@ function resolveWorkspaceFile(parent: string, name: string): string {
 }
 
 /**
- * 打开「创建多根工作区」引导面板（编辑器区居中）：
- * 选父目录 → 列子文件夹勾选 → 生成 .code-workspace 并在当前窗口打开；
- * 文件名输入时实时判断存在性并切换按钮；文件已存在时可直接加载或二次确认后覆盖重建。
+ * 在给定面板上设置「创建多根工作区」引导 UI 与消息处理。
+ * 可被独立命令或助手窗口内嵌复用。
  */
-export function openWorkspaceWizard(context: vscode.ExtensionContext): void {
-    const panel = vscode.window.createWebviewPanel(
-        'aiWorkbench.workspaceWizard',
-        '创建多根工作区',
-        vscode.ViewColumn.One,
-        { enableScripts: true }
-    );
-
+export function setupWorkspaceWizardPanel(panel: vscode.WebviewPanel, context: vscode.ExtensionContext): void {
     let parent: string | undefined;
 
     const send = (msg: WizardHostMessage): void => {
@@ -123,6 +115,17 @@ export function openWorkspaceWizard(context: vscode.ExtensionContext): void {
         undefined,
         context.subscriptions
     );
+}
+
+/** 打开独立的多根工作区引导面板。 */
+export function openWorkspaceWizard(context: vscode.ExtensionContext): void {
+    const panel = vscode.window.createWebviewPanel(
+        'aiWorkbench.workspaceWizard',
+        '创建多根工作区',
+        vscode.ViewColumn.One,
+        { enableScripts: true }
+    );
+    setupWorkspaceWizardPanel(panel, context);
 }
 
 function writeAndOpen(filePath: string, folders: string[]): void {

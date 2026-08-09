@@ -7,7 +7,7 @@ import { FileTagsStore } from '../storage/tagsStore';
  * 名称取文件夹名；标签按路径存 FileTagsStore。
  */
 export class WorkspaceProjectSource implements ProjectSource {
-    constructor(private readonly tags: FileTagsStore) {}
+    constructor(private readonly tags: FileTagsStore) { }
 
     listProjects(): Project[] {
         return (vscode.workspace.workspaceFolders ?? []).map((f) => {

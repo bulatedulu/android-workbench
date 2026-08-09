@@ -71,6 +71,11 @@
                 "command": "aiWorkbench.createWorkspace",
                 "title": "AI 工作台：创建多根工作区",
                 "icon": "$(workspace-untrusted)"
+            },
+            {
+                "command": "aiWorkbench.openAssistant",
+                "title": "AI 工作台：打开助手",
+                "icon": "$(sparkle)"
             }
         ],
         "menus": {
@@ -97,6 +102,11 @@
                 },
                 {
                     "command": "aiWorkbench.createWorkspace",
+                    "when": "view == aiWorkbench.projects",
+                    "group": "navigation"
+                },
+                {
+                    "command": "aiWorkbench.openAssistant",
                     "when": "view == aiWorkbench.projects",
                     "group": "navigation"
                 }

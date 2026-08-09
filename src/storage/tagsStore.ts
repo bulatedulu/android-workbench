@@ -8,7 +8,7 @@ import * as path from 'node:path';
 export class FileTagsStore {
     private cache: Record<string, string[]> | undefined;
 
-    constructor(private readonly filePath: string) {}
+    constructor(private readonly filePath: string) { }
 
     get(projectPath: string): string[] {
         return [...(this.data()[projectPath] ?? [])];
