@@ -17,7 +17,8 @@ export type WizardMessage =
     | { type: 'create'; folders: string[]; name: string }
     | { type: 'load'; name: string }
     | { type: 'overwrite'; folders: string[]; name: string }
-    | { type: 'nameChanged'; name: string };
+    | { type: 'nameChanged'; name: string }
+    | { type: 'close' };
 
 /** 宿主 → Webview 的消息。 */
 export type WizardHostMessage = { type: 'exists'; exists: boolean };
@@ -50,8 +51,14 @@ export function buildWizardHtml(state: WizardViewState): string {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  body { font-family: var(--vscode-font-family); padding: 16px 24px; max-width: 640px; }
-  h2 { margin-top: 0; }
+  body { margin: 0; height: 100vh; font-family: var(--vscode-font-family); }
+  .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: center; }
+  .modal { width: min(640px, 92vw); max-height: 84vh; display: flex; flex-direction: column; background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 8px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45); overflow: hidden; }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--vscode-panel-border); }
+  .modal-head h2 { margin: 0; font-size: 14px; font-weight: 600; }
+  #close { background: none; border: none; cursor: pointer; color: var(--vscode-descriptionForeground); font-size: 16px; padding: 2px 6px; line-height: 1; }
+  #close:hover { color: var(--vscode-foreground); }
+  .modal-body { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 24px; }
   .row { display: block; padding: 4px 0; }
   #subdirs { max-height: 280px; overflow-y: auto; border: 1px solid var(--vscode-panel-border); padding: 8px; margin-bottom: 8px; }
   #name { width: 320px; padding: 4px 6px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border, transparent); }
@@ -62,9 +69,18 @@ export function buildWizardHtml(state: WizardViewState): string {
 </style>
 </head>
 <body>
-<h2>创建多根工作区</h2>
-<div id="section-projects">${projectSection}</div>
-<div id="future">（预留：默认 Agent、key 配置等）</div>
+<div class="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>创建多根工作区</h2>
+      <button id="close" title="关闭">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="section-projects">${projectSection}</div>
+      <div id="future">（预留：默认 Agent、key 配置等）</div>
+    </div>
+  </div>
+</div>
 <script>
   const vscode = acquireVsCodeApi();
   let exists = ${state.exists ? 'true' : 'false'};
@@ -85,6 +101,10 @@ export function buildWizardHtml(state: WizardViewState): string {
   document.getElementById('create')?.addEventListener('click', () => vscode.postMessage({ type: 'create', ...collect() }));
   document.getElementById('load')?.addEventListener('click', () => vscode.postMessage({ type: 'load', ...collect() }));
   document.getElementById('overwrite')?.addEventListener('click', () => vscode.postMessage({ type: 'overwrite', ...collect() }));
+  document.getElementById('close')?.addEventListener('click', () => vscode.postMessage({ type: 'close' }));
+  document.querySelector('.overlay')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) { vscode.postMessage({ type: 'close' }); }
+  });
   document.getElementById('name')?.addEventListener('input', (e) => {
     vscode.postMessage({ type: 'nameChanged', name: e.target.value });
   });

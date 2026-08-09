@@ -48,6 +48,15 @@ describe('buildWizardHtml', () => {
         expect(html).toContain('showButtons()');
     });
 
+    it('模态遮罩弹层：overlay + 居中卡片 + 关闭按钮', () => {
+        const html = buildWizardHtml(state());
+        expect(html).toContain('class="overlay"');
+        expect(html).toContain('class="modal"');
+        expect(html).toContain('id="close"');
+        expect(html).toContain("vscode.postMessage({ type: 'close' })");
+        expect(html).toContain('e.target === e.currentTarget');
+    });
+
     it('子文件夹名做 HTML 转义（防注入）', () => {
         const html = buildWizardHtml(
             state({ parent: 'D:\\x', subdirs: ['D:\\x\\<script>alert(1)</script>'] })

@@ -110,6 +110,10 @@ export function setupWorkspaceWizardPanel(panel: vscode.WebviewPanel, context: v
                     }
                     break;
                 }
+                case 'close': {
+                    panel.dispose();
+                    break;
+                }
             }
         },
         undefined,

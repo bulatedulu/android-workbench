@@ -19,4 +19,13 @@ describe('buildAssistantChatHtml', () => {
         expect(html).toContain("vscode.postMessage({ type: 'send', text })");
         expect(html).toContain("msg.type === 'chat'");
     });
+
+    it('模态遮罩弹层：overlay + 居中卡片 + 关闭按钮', () => {
+        const html = buildAssistantChatHtml();
+        expect(html).toContain('class="overlay"');
+        expect(html).toContain('class="modal"');
+        expect(html).toContain('id="close"');
+        expect(html).toContain("vscode.postMessage({ type: 'close' })");
+        expect(html).toContain('e.target === e.currentTarget');
+    });
 });

@@ -52,6 +52,10 @@ export function openAssistantHub(context: vscode.ExtensionContext): void {
     panel.webview.onDidReceiveMessage(
         async (raw) => {
             const message = raw as { type?: string; text?: string };
+            if (message?.type === 'close') {
+                panel.dispose();
+                return;
+            }
             if (message?.type === 'ready') {
                 ready = true;
                 for (const m of pending) {
