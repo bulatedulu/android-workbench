@@ -129,6 +129,19 @@ describe('WorkbenchService', () => {
         expect(service.listSessionsForProject(project)).toHaveLength(1);
     });
 
+    it('listSessionsUnderFolder 匹配任意文件夹（含子目录）', () => {
+        const sessions = [
+            makeSession('a', 'D:\\bug_list\\BUG-1'),
+            makeSession('b', 'D:\\bug_list\\BUG-1\\src'),
+            makeSession('c', 'D:\\other')
+        ];
+        const service = new WorkbenchService(new FakeProjects([]), new FakeProvider(sessions));
+
+        expect(service.listSessionsUnderFolder('D:\\bug_list\\BUG-1').map((s) => s.id)).toEqual(['a', 'b']);
+        expect(service.listSessionsUnderFolder('D:\\other').map((s) => s.id)).toEqual(['c']);
+        expect(service.listSessionsUnderFolder('D:\\none')).toEqual([]);
+    });
+
     it('updateTags 保存到项目来源，并反映在 listProjects 中', () => {
         const projects = new FakeProjects([makeProject('D:\\bug_list\\BUG-1', 'BUG-1')]);
         const service = new WorkbenchService(projects, new FakeProvider([]));

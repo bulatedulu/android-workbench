@@ -65,7 +65,12 @@ export class WorkbenchService {
 
     /** 某项目下的全部会话（不受搜索过滤影响）。 */
     listAllSessionsForProject(project: Project): Session[] {
-        return this.sessions().filter((s) => isUnderProject(s.cwd, project.path));
+        return this.listSessionsUnderFolder(project.path);
+    }
+
+    /** 任意文件夹下的会话（cwd 匹配，供 Explorer 右键等入口使用）。 */
+    listSessionsUnderFolder(folderPath: string): Session[] {
+        return this.sessions().filter((s) => isUnderProject(s.cwd, folderPath));
     }
 
     /** 某项目下的会话（工作目录匹配 + 当前搜索条件）。 */

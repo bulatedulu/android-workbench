@@ -76,6 +76,10 @@
                 "command": "aiWorkbench.openAssistant",
                 "title": "AI 工作台：打开助手",
                 "icon": "$(sparkle)"
+            },
+            {
+                "command": "aiWorkbench.explorerSessionList",
+                "title": "AI 工作台：查看会话列表"
             }
         ],
         "menus": {
@@ -121,6 +125,13 @@
                     "command": "aiWorkbench.removeProject",
                     "when": "view == aiWorkbench.projects && viewItem == project",
                     "group": "inline"
+                }
+            ],
+            "explorer/context": [
+                {
+                    "command": "aiWorkbench.explorerSessionList",
+                    "when": "explorerResourceIsFolder",
+                    "group": "aiWorkbench@1"
                 }
             ]
         }

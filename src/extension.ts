@@ -11,6 +11,7 @@ import { registerSearchCommands } from './ui/searchCommands';
 import { showSessionViewer } from './ui/sessionViewer';
 import { openWorkspaceWizard } from './ui/workspaceWizard';
 import { openAssistantHub } from './ui/assistantHub';
+import { registerExplorerSessionList } from './ui/explorerSessions';
 import { statusMessage } from './ui/messages';
 
 /** 根据 pi 存储与命令可用性，设置树视图的空态消息。 */
@@ -57,6 +58,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     registerProjectCommands(context, service, tree);
     registerSearchCommands(context, service, tree);
+    registerExplorerSessionList(context, service, provider);
 }
 
 export function deactivate(): void { }
