@@ -1,14 +1,15 @@
 import * as vscode from 'vscode';
-import { Project, ProjectRegistry } from '../domain/project';
+import { Project } from '../domain/project';
+import { WorkbenchService } from '../domain/workbench';
 import { WorkbenchTreeProvider } from './workbenchTree';
 
 /**
- * 项目管理的命令：添加 / 编辑 / 删除。
- * 保持薄——只做交互（对话框、提示、刷新树），逻辑都在领域层。
+ * 项目管理命令：添加 / 编辑标签 / 移除（工作区驱动，均不重载窗口）。
+ * 保持薄——只做交互（对话框、提示），工作区变更由 onDidChangeWorkspaceFolders 刷新树。
  */
 export function registerProjectCommands(
     context: vscode.ExtensionContext,
-    registry: ProjectRegistry,
+    service: WorkbenchService,
     tree: WorkbenchTreeProvider
 ): void {
     context.subscriptions.push(
@@ -22,22 +23,26 @@ export function registerProjectCommands(
             if (!folders || folders.length === 0) {
                 return;
             }
-            const path = folders[0].fsPath;
-            const name = path.split(/[\\/]/).filter(Boolean).pop() ?? path;
-            try {
-                registry.add({ name, path });
-                tree.refresh();
-            } catch (err) {
-                vscode.window.showErrorMessage(err instanceof Error ? err.message : String(err));
+            const uri = folders[0];
+            const alreadyOpen = vscode.workspace.workspaceFolders?.some(
+                (f) => f.uri.fsPath === uri.fsPath
+            );
+            if (alreadyOpen) {
+                void vscode.window.showInformationMessage('该项目已在当前工作区中。');
+                return;
+            }
+            const added = vscode.workspace.updateWorkspaceFolders(
+                vscode.workspace.workspaceFolders?.length ?? 0,
+                0,
+                { uri }
+            );
+            if (!added) {
+                void vscode.window.showErrorMessage('添加项目失败：无法更新工作区。');
             }
         }),
 
-        vscode.commands.registerCommand('aiWorkbench.editProject', async (project?: Project) => {
+        vscode.commands.registerCommand('aiWorkbench.editTags', async (project?: Project) => {
             if (!project) {
-                return;
-            }
-            const name = await vscode.window.showInputBox({ prompt: '项目名称', value: project.name });
-            if (name === undefined) {
                 return;
             }
             const tagsText = await vscode.window.showInputBox({
@@ -51,12 +56,8 @@ export function registerProjectCommands(
                 .split(/[,，]/)
                 .map((t) => t.trim())
                 .filter(Boolean);
-            try {
-                registry.update(project.id, { name, tags });
-                tree.refresh();
-            } catch (err) {
-                vscode.window.showErrorMessage(err instanceof Error ? err.message : String(err));
-            }
+            service.updateTags(project.path, tags);
+            tree.refreshView();
         }),
 
         vscode.commands.registerCommand('aiWorkbench.removeProject', async (project?: Project) => {
@@ -64,15 +65,18 @@ export function registerProjectCommands(
                 return;
             }
             const answer = await vscode.window.showWarningMessage(
-                `确定删除项目「${project.name}」？删除只移除注册，不会删除任何会话数据。`,
+                `确定从当前工作区移除项目「${project.name}」？仅移除，不会删除磁盘或会话数据。`,
                 { modal: true },
-                '删除'
+                '移除'
             );
-            if (answer !== '删除') {
+            if (answer !== '移除') {
                 return;
             }
-            registry.remove(project.id);
-            tree.refresh();
+            const index = vscode.workspace.workspaceFolders?.findIndex((f) => f.uri.fsPath === project.path) ?? -1;
+            if (index === -1) {
+                return;
+            }
+            vscode.workspace.updateWorkspaceFolders(index, 1);
         })
     );
 }

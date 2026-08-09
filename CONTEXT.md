@@ -5,8 +5,8 @@ A VS Code extension providing a workbench to manage multiple projects and the AI
 ## Language
 
 **Project**:
-An abstract entity managed by the workbench — a name, a disk path, and metadata (tags, description). It exists independently of which workspace is currently open in VS Code.
-_Avoid_: Workspace, folder
+当前 VS Code 工作区中的一个文件夹（单根或 `.code-workspace` 多根），工作台管理其 AI 会话。名称 = 文件夹名；标签按路径存储；随工作区存在，不做独立注册。
+_Avoid_: Workspace（指整个工作区）、独立注册的项目实体
 
 **Session**:
 A persisted AI conversation thread belonging to exactly one Project — a message list (role, content, timestamp), the model used, a title, tags, and timestamps.

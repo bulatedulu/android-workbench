@@ -17,7 +17,7 @@ export class PiProvider implements AgentProvider {
     constructor(
         private readonly storeRoot?: string,
         private readonly commandExists: (command: string) => boolean = commandExistsOnPath
-    ) {}
+    ) { }
 
     discoverStore(): string | undefined {
         const root = this.storeRoot ?? path.join(os.homedir(), '.pi', 'agent', 'sessions');
@@ -121,9 +121,9 @@ function commandExistsOnPath(command: string): boolean {
     const pathEnv = process.env.PATH ?? '';
     const extensions = process.platform === 'win32'
         ? (process.env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD')
-              .split(';')
-              .map((e) => e.toLowerCase())
-              .filter(Boolean)
+            .split(';')
+            .map((e) => e.toLowerCase())
+            .filter(Boolean)
         : [''];
     const dirs = pathEnv.split(path.delimiter).filter(Boolean);
     for (const dir of dirs) {

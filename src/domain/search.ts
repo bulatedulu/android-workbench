@@ -12,7 +12,7 @@ export interface SearchFilters {
  * 消息文本通过注入的 readSessionText 获取（接缝，便于测试）。
  */
 export class SearchService {
-    constructor(private readonly readSessionText: (session: Session) => string) {}
+    constructor(private readonly readSessionText: (session: Session) => string) { }
 
     search(sessions: Session[], query: string, filters: SearchFilters = {}): Session[] {
         const q = query.trim().toLowerCase();

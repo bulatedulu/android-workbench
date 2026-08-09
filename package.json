@@ -43,13 +43,13 @@
                 "icon": "$(add)"
             },
             {
-                "command": "aiWorkbench.editProject",
-                "title": "AI 工作台：编辑项目",
+                "command": "aiWorkbench.editTags",
+                "title": "AI 工作台：编辑标签",
                 "icon": "$(edit)"
             },
             {
                 "command": "aiWorkbench.removeProject",
-                "title": "AI 工作台：删除项目",
+                "title": "AI 工作台：移除项目",
                 "icon": "$(trash)"
             },
             {
@@ -93,7 +93,7 @@
             ],
             "view/item/context": [
                 {
-                    "command": "aiWorkbench.editProject",
+                    "command": "aiWorkbench.editTags",
                     "when": "view == aiWorkbench.projects && viewItem == project",
                     "group": "inline"
                 },

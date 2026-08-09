@@ -1,10 +1,10 @@
-import { Project, ProjectRegistry } from './project';
+import { Project, ProjectSource } from './project';
 import { Session, isUnderProject } from './session';
 import { SearchService, SearchFilters } from './search';
 import { AgentProvider } from '../agent/provider';
 
 /**
- * 工作台协调器：把项目注册表、Agent 会话扫描与搜索组合起来。
+ * 工作台协调器：把项目来源（工作区文件夹）、Agent 会话扫描与搜索组合起来。
  * 按需扫描 + 内存缓存（ADR-0001：v1 无持久化索引）；refresh() 清缓存触发重扫。
  */
 export class WorkbenchService {
@@ -14,7 +14,7 @@ export class WorkbenchService {
     private filters: SearchFilters = {};
 
     constructor(
-        private readonly registry: ProjectRegistry,
+        private readonly projects: ProjectSource,
         private readonly provider: AgentProvider
     ) {
         this.searchService = new SearchService((s) => provider.readSessionText(s));
@@ -56,7 +56,11 @@ export class WorkbenchService {
     }
 
     listProjects(): Project[] {
-        return this.registry.list();
+        return this.projects.listProjects();
+    }
+
+    updateTags(projectPath: string, tags: string[]): void {
+        this.projects.saveTags(projectPath, tags);
     }
 
     /** 某项目下的全部会话（不受搜索过滤影响）。 */

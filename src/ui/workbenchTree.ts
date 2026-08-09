@@ -17,7 +17,7 @@ export class PlaceholderNode {
 export type TreeNode = Project | AgentNode | Session | PlaceholderNode;
 
 function isProject(e: TreeNode): e is Project {
-    return 'tags' in e;
+    return 'name' in e && 'tags' in e;
 }
 
 function isAgentNode(e: TreeNode): e is AgentNode {
@@ -43,11 +43,18 @@ export class WorkbenchTreeProvider implements vscode.TreeDataProvider<TreeNode> 
         this._onDidChangeTreeData.fire();
     }
 
+    /** 仅刷新树视图（不清会话缓存，适用于标签等非扫描类变更）。 */
+    refreshView(): void {
+        this._onDidChangeTreeData.fire();
+    }
+
     getTreeItem(element: TreeNode): vscode.TreeItem {
         if (isProject(element)) {
             const item = new vscode.TreeItem(element.name, vscode.TreeItemCollapsibleState.Collapsed);
-            item.description = element.path;
-            item.tooltip = `${element.name}\n${element.path}`;
+            item.description = element.tags.length > 0 ? element.tags.join(', ') : element.path;
+            item.tooltip =
+                `${element.name}\n${element.path}` +
+                (element.tags.length > 0 ? `\n标签：${element.tags.join(', ')}` : '');
             item.contextValue = 'project';
             return item;
         }

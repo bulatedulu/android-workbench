@@ -1,41 +1,15 @@
 import * as vscode from 'vscode';
-import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { Project, ProjectRegistry, ProjectStore } from './domain/project';
 import { Session } from './domain/session';
 import { WorkbenchService } from './domain/workbench';
 import { PiProvider } from './agent/piProvider';
+import { FileTagsStore } from './storage/tagsStore';
+import { WorkspaceProjectSource } from './ui/workspaceProjects';
 import { WorkbenchTreeProvider } from './ui/workbenchTree';
 import { registerProjectCommands } from './ui/commands';
 import { registerSearchCommands } from './ui/searchCommands';
 import { showSessionViewer } from './ui/sessionViewer';
 import { statusMessage } from './ui/messages';
-
-/**
- * 以 globalStorage 下的 JSON 文件为后端的 ProjectStore 实现（符合规范决策）。
- * 领域层不感知 VS Code；此实现是接缝处唯一的 VS Code 依赖。
- */
-class GlobalStorageProjectStore implements ProjectStore {
-    private readonly filePath: string;
-
-    constructor(context: vscode.ExtensionContext) {
-        this.filePath = path.join(context.globalStorageUri.fsPath, 'projects.json');
-    }
-
-    load(): Project[] {
-        try {
-            const parsed = JSON.parse(fs.readFileSync(this.filePath, 'utf8')) as unknown;
-            return Array.isArray(parsed) ? (parsed as Project[]) : [];
-        } catch {
-            return [];
-        }
-    }
-
-    save(projects: Project[]): void {
-        fs.mkdirSync(path.dirname(this.filePath), { recursive: true });
-        fs.writeFileSync(this.filePath, JSON.stringify(projects, null, 2), 'utf8');
-    }
-}
 
 /** 根据 pi 存储与命令可用性，设置树视图的空态消息。 */
 function updateViewMessage(view: vscode.TreeView<unknown>, service: WorkbenchService): void {
@@ -43,16 +17,18 @@ function updateViewMessage(view: vscode.TreeView<unknown>, service: WorkbenchSer
 }
 
 export function activate(context: vscode.ExtensionContext): void {
-    const store = new GlobalStorageProjectStore(context);
-    const registry = new ProjectRegistry(store);
+    const tags = new FileTagsStore(path.join(context.globalStorageUri.fsPath, 'tags.json'));
+    const projects = new WorkspaceProjectSource(tags);
     const provider = new PiProvider();
-    const service = new WorkbenchService(registry, provider);
+    const service = new WorkbenchService(projects, provider);
     const tree = new WorkbenchTreeProvider(service);
 
     const view = vscode.window.createTreeView('aiWorkbench.projects', { treeDataProvider: tree });
     updateViewMessage(view, service);
     context.subscriptions.push(
         view,
+        // 工作区文件夹增删（含 VS Code 原生操作）时自动刷新树
+        vscode.workspace.onDidChangeWorkspaceFolders(() => tree.refresh()),
         vscode.commands.registerCommand('aiWorkbench.openWorkbench', () => {
             void vscode.commands.executeCommand('aiWorkbench.projects.focus');
         }),
@@ -71,7 +47,7 @@ export function activate(context: vscode.ExtensionContext): void {
         })
     );
 
-    registerProjectCommands(context, registry, tree);
+    registerProjectCommands(context, service, tree);
     registerSearchCommands(context, service, tree);
 }
 

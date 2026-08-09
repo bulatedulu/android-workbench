@@ -1,17 +1,30 @@
 import { describe, it, expect } from 'vitest';
 import { WorkbenchService } from './workbench';
-import { ProjectRegistry, ProjectStore, Project } from './project';
+import { Project, ProjectSource, projectFromPath } from './project';
 import { Session, SessionContent } from './session';
 import { AgentProvider } from '../agent/provider';
 
-class MemoryStore implements ProjectStore {
-    private data: Project[] = [];
-    load(): Project[] {
-        return this.data;
+class FakeProjects implements ProjectSource {
+    private tagMap: Record<string, string[]> = {};
+
+    constructor(private readonly projects: Project[]) {}
+
+    listProjects(): Project[] {
+        return this.projects.map((p) => ({ ...p, tags: [...(this.tagMap[p.path] ?? p.tags)] }));
     }
-    save(projects: Project[]): void {
-        this.data = projects;
+
+    saveTags(projectPath: string, tags: string[]): void {
+        this.tagMap[projectPath] = [...tags];
     }
+}
+
+function makeProject(projectPath: string, name?: string): Project {
+    const p = projectFromPath(projectPath);
+    return name ? { ...p, name } : p;
+}
+
+function makeSession(id: string, cwd: string): Session {
+    return { id, agent: 'pi', path: `/sessions/${id}.jsonl`, cwd, title: id, model: 'gpt-4.1', createdAt: 1, updatedAt: 1 };
 }
 
 class FakeProvider implements AgentProvider {
@@ -26,7 +39,7 @@ class FakeProvider implements AgentProvider {
     readSessionText(session: Session): string {
         return `text-${session.id}`;
     }
-    readSessionContent(session: Session): SessionContent {
+    readSessionContent(_session: Session): SessionContent {
         return { messages: [] };
     }
     resumeSession(_session: Session, _run: (command: string) => boolean): boolean {
@@ -37,20 +50,23 @@ class FakeProvider implements AgentProvider {
     }
 }
 
-function makeSession(id: string, cwd: string): Session {
-    return { id, agent: 'pi', path: `/sessions/${id}.jsonl`, cwd, title: id, model: 'gpt-4.1', createdAt: 1, updatedAt: 1 };
-}
-
 describe('WorkbenchService', () => {
+    it('listProjects 来自项目来源', () => {
+        const projects = new FakeProjects([makeProject('D:\\bug_list\\BUG-1', 'BUG-1')]);
+        const service = new WorkbenchService(projects, new FakeProvider([]));
+
+        expect(service.listProjects()).toHaveLength(1);
+        expect(service.listProjects()[0].name).toBe('BUG-1');
+    });
+
     it('只返回与项目匹配（精确或子目录）的会话', () => {
-        const registry = new ProjectRegistry(new MemoryStore());
-        const project = registry.add({ name: 'BUG-1', path: 'D:\\bug_list\\BUG-1' });
+        const project = makeProject('D:\\bug_list\\BUG-1', 'BUG-1');
         const sessions = [
             makeSession('a', 'D:\\bug_list\\BUG-1'),
             makeSession('b', 'D:\\bug_list\\BUG-1\\src'),
             makeSession('c', 'D:\\other\\project')
         ];
-        const service = new WorkbenchService(registry, new FakeProvider(sessions));
+        const service = new WorkbenchService(new FakeProjects([project]), new FakeProvider(sessions));
 
         const list = service.listSessionsForProject(project);
 
@@ -71,9 +87,8 @@ describe('WorkbenchService', () => {
             resumeSession: () => true,
             isAvailable: () => true
         };
-        const registry = new ProjectRegistry(new MemoryStore());
-        const project = registry.add({ name: 'BUG-1', path: 'D:\\bug_list\\BUG-1' });
-        const service = new WorkbenchService(registry, provider);
+        const project = makeProject('D:\\bug_list\\BUG-1', 'BUG-1');
+        const service = new WorkbenchService(new FakeProjects([project]), provider);
 
         service.listSessionsForProject(project);
         service.listSessionsForProject(project);
@@ -84,17 +99,16 @@ describe('WorkbenchService', () => {
         expect(scanCount).toBe(2);
     });
 
-    it('暴露 provider 的 agentName', () => {
-        const registry = new ProjectRegistry(new MemoryStore());
-        const service = new WorkbenchService(registry, new FakeProvider([]));
+    it('暴露 provider 的 agentName 与 agentAvailable', () => {
+        const service = new WorkbenchService(new FakeProjects([]), new FakeProvider([]));
         expect(service.agentName).toBe('pi');
+        expect(service.agentAvailable).toBe(true);
     });
 
     it('setSearch 后只返回匹配的会话，clearSearch 恢复全部', () => {
-        const registry = new ProjectRegistry(new MemoryStore());
-        const project = registry.add({ name: 'BUG-1', path: 'D:\\bug_list\\BUG-1' });
+        const project = makeProject('D:\\bug_list\\BUG-1', 'BUG-1');
         const sessions = [makeSession('a', 'D:\\bug_list\\BUG-1'), makeSession('b', 'D:\\bug_list\\BUG-1')];
-        const service = new WorkbenchService(registry, new FakeProvider(sessions));
+        const service = new WorkbenchService(new FakeProjects([project]), new FakeProvider(sessions));
 
         service.setSearch('text-a');
         expect(service.isSearching).toBe(true);
@@ -106,13 +120,22 @@ describe('WorkbenchService', () => {
     });
 
     it('listAllSessionsForProject 不受搜索影响', () => {
-        const registry = new ProjectRegistry(new MemoryStore());
-        const project = registry.add({ name: 'BUG-1', path: 'D:\\bug_list\\BUG-1' });
+        const project = makeProject('D:\\bug_list\\BUG-1', 'BUG-1');
         const sessions = [makeSession('a', 'D:\\bug_list\\BUG-1'), makeSession('b', 'D:\\bug_list\\BUG-1')];
-        const service = new WorkbenchService(registry, new FakeProvider(sessions));
+        const service = new WorkbenchService(new FakeProjects([project]), new FakeProvider(sessions));
 
         service.setSearch('text-a');
         expect(service.listAllSessionsForProject(project)).toHaveLength(2);
         expect(service.listSessionsForProject(project)).toHaveLength(1);
+    });
+
+    it('updateTags 保存到项目来源，并反映在 listProjects 中', () => {
+        const projects = new FakeProjects([makeProject('D:\\bug_list\\BUG-1', 'BUG-1')]);
+        const service = new WorkbenchService(projects, new FakeProvider([]));
+
+        service.updateTags('D:\\bug_list\\BUG-1', ['bug', 'urgent']);
+
+        expect(projects.listProjects()[0].tags).toEqual(['bug', 'urgent']);
+        expect(projects.listProjects().find((p) => p.path === 'D:\\other')).toBeUndefined();
     });
 });
