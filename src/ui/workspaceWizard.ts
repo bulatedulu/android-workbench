@@ -9,6 +9,8 @@ import {
     listSubdirectories
 } from '../domain/workspaceSetup';
 
+import { hideEditorTabsWhileOpen } from './editorTabs';
+
 function resolveWorkspaceFile(parent: string, name: string): string {
     return path.join(parent, ensureWorkspaceExtension(name));
 }
@@ -129,6 +131,8 @@ export function openWorkspaceWizard(context: vscode.ExtensionContext): void {
         vscode.ViewColumn.One,
         { enableScripts: true }
     );
+    // 弹窗打开期间隐藏编辑器标签栏；关闭时自动恢复（内嵌于助手时由助手入口统一处理）
+    hideEditorTabsWhileOpen(panel, context);
     setupWorkspaceWizardPanel(panel, context);
 }
 

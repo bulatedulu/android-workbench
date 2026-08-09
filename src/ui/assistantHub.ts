@@ -10,6 +10,7 @@ import {
     resolveProjectRoot
 } from '../domain/issueSpace';
 import { NEW_ISSUE_COMMAND } from './messages';
+import { hideEditorTabsWhileOpen } from './editorTabs';
 
 interface PendingChat {
     role: 'assistant' | 'system';
@@ -29,6 +30,8 @@ export function openAssistantHub(context: vscode.ExtensionContext): void {
         vscode.ViewColumn.One,
         { enableScripts: true }
     );
+    // 弹窗打开期间隐藏编辑器标签栏，防止切换编辑器；关闭时自动恢复
+    hideEditorTabsWhileOpen(panel, context);
 
     if (!vscode.workspace.workspaceFile) {
         // 第一步：引导创建多根工作区（项目存放根目录 = 工作区文件所在目录）
