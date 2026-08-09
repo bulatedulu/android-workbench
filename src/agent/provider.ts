@@ -1,4 +1,4 @@
-import { Session } from '../domain/session';
+import { Session, SessionContent } from '../domain/session';
 
 /**
  * Agent 会话提供者接口：工作台通过它发现并读取某个 Agent 的会话。
@@ -12,4 +12,8 @@ export interface AgentProvider {
     scanSessions(): Session[];
     /** 读取会话的全部消息文本（用于搜索），失败时返回空字符串。 */
     readSessionText(session: Session): string;
+    /** 读取会话的结构化内容（消息序列，供查看器渲染）。 */
+    readSessionContent(session: Session): SessionContent;
+    /** 在 Agent 中恢复/继续该会话：构造命令并通过注入的 runner 执行。 */
+    resumeSession(session: Session, run: (command: string) => void): void;
 }

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { Project } from '../domain/project';
 import { Session } from '../domain/session';
 import { WorkbenchService } from '../domain/workbench';
+import { formatTime } from './format';
 
 /** Agent 层级节点：持有其已归属会话（getChildren 需要上下文）。 */
 export class AgentNode {
@@ -67,6 +68,7 @@ export class WorkbenchTreeProvider implements vscode.TreeDataProvider<TreeNode> 
             : formatTime(element.createdAt);
         item.tooltip = `${element.title}\n${element.cwd}${element.model ? `\n${element.model}` : ''}`;
         item.contextValue = 'session';
+        item.command = { command: 'aiWorkbench.openSession', title: '查看会话', arguments: [element] };
         return item;
     }
 
@@ -91,10 +93,4 @@ export class WorkbenchTreeProvider implements vscode.TreeDataProvider<TreeNode> 
         }
         return [];
     }
-}
-
-function formatTime(ts: number): string {
-    const d = new Date(ts);
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }

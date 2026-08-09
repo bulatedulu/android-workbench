@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { Session } from '../domain/session';
+import { Session, SessionContent, SessionMessage } from '../domain/session';
 import { AgentProvider } from './provider';
 
 const MAX_TITLE = 50;
@@ -37,24 +37,37 @@ export class PiProvider implements AgentProvider {
     }
 
     readSessionText(session: Session): string {
+        return this.readSessionContent(session)
+            .messages.map((m) => m.text)
+            .filter((t) => t !== '')
+            .join('\n');
+    }
+
+    readSessionContent(session: Session): SessionContent {
         let content: string;
         try {
             content = fs.readFileSync(session.path, 'utf8');
         } catch {
-            return '';
+            return { messages: [] };
         }
-        const parts: string[] = [];
+        const messages: SessionMessage[] = [];
         forEachJsonLine(content, (obj) => {
-            if (obj.type === 'message') {
-                const message = obj.message as { content?: unknown } | undefined;
-                // 搜索需要完整文本，不截断
-                const text = extractText(message?.content, false);
-                if (text) {
-                    parts.push(text);
-                }
+            if (obj.type !== 'message') {
+                return;
             }
+            const message = obj.message as { role?: string; timestamp?: number; content?: unknown } | undefined;
+            messages.push({
+                role: message?.role ?? 'unknown',
+                timestamp: typeof message?.timestamp === 'number' ? message.timestamp : 0,
+                text: extractContentText(message?.content)
+            });
         });
-        return parts.join('\n');
+        return { messages };
+    }
+
+    resumeSession(session: Session, run: (command: string) => void): void {
+        const escaped = session.path.replace(/"/g, '\\"');
+        run(`pi --resume "${escaped}"`);
     }
 }
 
@@ -155,6 +168,20 @@ function parseSessionFile(filePath: string): Session | undefined {
         model: model ?? undefined,
         createdAt
     };
+}
+
+/** 提取完整文本：保留换行与空白（供查看器渲染），不截断。 */
+function extractContentText(content: unknown): string {
+    if (typeof content === 'string') {
+        return content;
+    }
+    if (Array.isArray(content)) {
+        const parts = content
+            .filter((part): part is { text?: string } => typeof part === 'object' && part !== null && 'text' in part)
+            .map((part) => part.text ?? '');
+        return parts.join('\n').trim();
+    }
+    return '';
 }
 
 function extractText(content: unknown, truncate = true): string | undefined {

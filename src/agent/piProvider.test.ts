@@ -161,4 +161,41 @@ describe('PiProvider', () => {
 
         expect(provider.readSessionText(sessions[0])).toContain('关键目标词');
     });
+
+    it('readSessionContent 返回结构化消息序列（角色/时间/文本，保持顺序）', () => {
+        const root = makeStore();
+        writeSession(root, '--A--', realFormatLines('D:\\a', { title: '你好', model: 'gpt-4.1' }));
+
+        const provider = new PiProvider(root);
+        const sessions = provider.scanSessions();
+        const content = provider.readSessionContent(sessions[0]);
+
+        expect(content.messages).toHaveLength(2);
+        expect(content.messages[0].role).toBe('user');
+        expect(content.messages[0].text).toBe('你好');
+        expect(content.messages[0].timestamp).toBe(1786226510547);
+        expect(content.messages[1].role).toBe('assistant');
+        expect(content.messages[1].timestamp).toBe(1786226510762);
+    });
+
+    it('readSessionContent 对不可读文件返回空消息序列', () => {
+        const provider = new PiProvider(makeStore());
+        const content = provider.readSessionContent({ id: 'x', agent: 'pi', path: path.join(os.tmpdir(), 'no-such.jsonl'), cwd: '', title: '', model: undefined, createdAt: 0 });
+        expect(content.messages).toEqual([]);
+    });
+
+    it('resumeSession 通过注入的 runner 执行 pi --resume 命令', () => {
+        const root = makeStore();
+        const file = writeSession(root, '--A--', realFormatLines('D:\\a'));
+        const provider = new PiProvider(root);
+        const session = provider.scanSessions()[0];
+
+        let captured: string | undefined;
+        provider.resumeSession(session, (cmd) => {
+            captured = cmd;
+        });
+
+        expect(captured).toContain('pi --resume');
+        expect(captured).toContain(file);
+    });
 });

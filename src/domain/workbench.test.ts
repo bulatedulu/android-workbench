@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { WorkbenchService } from './workbench';
 import { ProjectRegistry, ProjectStore, Project } from './project';
-import { Session } from './session';
+import { Session, SessionContent } from './session';
 import { AgentProvider } from '../agent/provider';
 
 class MemoryStore implements ProjectStore {
@@ -26,6 +26,10 @@ class FakeProvider implements AgentProvider {
     readSessionText(session: Session): string {
         return `text-${session.id}`;
     }
+    readSessionContent(session: Session): SessionContent {
+        return { messages: [] };
+    }
+    resumeSession(_session: Session, _run: (command: string) => void): void { }
 }
 
 function makeSession(id: string, cwd: string): Session {
@@ -57,7 +61,9 @@ describe('WorkbenchService', () => {
                 scanCount++;
                 return [makeSession('a', 'D:\\bug_list\\BUG-1')];
             },
-            readSessionText: () => ''
+            readSessionText: () => '',
+            readSessionContent: () => ({ messages: [] }),
+            resumeSession: () => undefined
         };
         const registry = new ProjectRegistry(new MemoryStore());
         const project = registry.add({ name: 'BUG-1', path: 'D:\\bug_list\\BUG-1' });

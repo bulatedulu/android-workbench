@@ -13,6 +13,19 @@ export interface Session {
     readonly createdAt: number;
 }
 
+/** 会话中的一条消息（供查看器渲染）。 */
+export interface SessionMessage {
+    role: string;
+    /** 纪元毫秒 */
+    timestamp: number;
+    text: string;
+}
+
+/** 会话的结构化内容：按序的消息序列。 */
+export interface SessionContent {
+    messages: SessionMessage[];
+}
+
 /** 会话工作目录是否属于某项目（精确或子目录匹配）。 */
 export function isUnderProject(cwd: string, projectPath: string): boolean {
     const c = normalizePathForMatch(cwd);

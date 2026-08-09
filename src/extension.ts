@@ -2,11 +2,13 @@ import * as vscode from 'vscode';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Project, ProjectRegistry, ProjectStore } from './domain/project';
+import { Session } from './domain/session';
 import { WorkbenchService } from './domain/workbench';
 import { PiProvider } from './agent/piProvider';
 import { WorkbenchTreeProvider } from './ui/workbenchTree';
 import { registerProjectCommands } from './ui/commands';
 import { registerSearchCommands } from './ui/searchCommands';
+import { showSessionViewer } from './ui/sessionViewer';
 
 /**
  * 以 globalStorage 下的 JSON 文件为后端的 ProjectStore 实现（符合规范决策）。
@@ -37,7 +39,8 @@ class GlobalStorageProjectStore implements ProjectStore {
 export function activate(context: vscode.ExtensionContext): void {
     const store = new GlobalStorageProjectStore(context);
     const registry = new ProjectRegistry(store);
-    const service = new WorkbenchService(registry, new PiProvider());
+    const provider = new PiProvider();
+    const service = new WorkbenchService(registry, provider);
     const tree = new WorkbenchTreeProvider(service);
 
     const view = vscode.window.createTreeView('aiWorkbench.projects', { treeDataProvider: tree });
@@ -48,6 +51,9 @@ export function activate(context: vscode.ExtensionContext): void {
         view,
         vscode.commands.registerCommand('aiWorkbench.openWorkbench', () => {
             void vscode.commands.executeCommand('aiWorkbench.projects.focus');
+        }),
+        vscode.commands.registerCommand('aiWorkbench.openSession', (session: Session) => {
+            showSessionViewer(context, session, provider);
         })
     );
 
