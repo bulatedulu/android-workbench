@@ -197,17 +197,20 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
         void vscode.window.showInformationMessage('初始化已完成。');
     }
 
-    /** 把文件夹增量加入当前工作区（不重载窗口）。 */
+    /** 把文件夹加入当前工作区（不重载窗口）。一次调用添加全部：空工作区逐个添加会先变单文件夹、后续失败。 */
     private addFoldersToWorkspace(folders: string[]): void {
         const existing = new Set(
             (vscode.workspace.workspaceFolders ?? []).map((f) => normalizePathForMatch(f.uri.fsPath))
         );
         const toAdd = folders.filter((f) => !existing.has(normalizePathForMatch(f)));
-        let index = vscode.workspace.workspaceFolders?.length ?? 0;
-        for (const f of toAdd) {
-            vscode.workspace.updateWorkspaceFolders(index, 0, { uri: vscode.Uri.file(f) });
-            index += 1;
+        if (toAdd.length === 0) {
+            return;
         }
+        vscode.workspace.updateWorkspaceFolders(
+            vscode.workspace.workspaceFolders?.length ?? 0,
+            0,
+            ...toAdd.map((f) => ({ uri: vscode.Uri.file(f) }))
+        );
     }
 
     private postChat(role: 'assistant' | 'system', text: string): void {
