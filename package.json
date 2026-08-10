@@ -48,7 +48,7 @@
             }
         ],
         "menus": {
-            "titleBar": [
+            "editor/title": [
                 {
                     "command": "aiWorkbench.toggleFullscreen",
                     "group": "navigation"
