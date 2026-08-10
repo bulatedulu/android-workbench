@@ -48,7 +48,9 @@ describe('buildAssistantViewHtml', () => {
         );
         expect(html).toContain('D:\\bug_list');
         expect(html).toContain('工作目录');
-        expect(html).toContain('重新选择');
+        expect(html).toContain('id="re-pick"');
+        expect(html).toContain('点击重新选择');
+        expect(html).not.toContain('重新选择…');
         expect(html).toContain('BUG-1');
         expect(html).toContain('BUG-2');
         expect(html).toContain('value="bug_list.code-workspace"');

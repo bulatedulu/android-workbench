@@ -44,7 +44,7 @@ function renderProjectSection(state: AssistantWizardState): string {
         `<button id="load" class="primary"${state.exists ? '' : ' hidden'}>直接加载</button>` +
         `<button id="overwrite"${state.exists ? '' : ' hidden'}>覆盖重建</button>`;
     return (
-        `<p>工作目录：<code>${escapeHtml(state.parent)}</code> <button id="pick">重新选择…</button></p>` +
+        `<p>工作目录：<a id="re-pick" title="点击重新选择">${escapeHtml(state.parent)}</a></p>` +
         `<div id="subdirs">${rows || '<p class="hint">（该目录下没有子文件夹）</p>'}</div>` +
         `<p>工作区文件名：<input id="name" value="${escapeHtml(state.defaultName)}"></p>` +
         `<div id="actions">${actions}</div>` +
@@ -70,6 +70,7 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
   #subdirs { max-height: 220px; overflow-y: auto; border: 1px solid var(--vscode-panel-border); padding: 8px; margin: 8px 0; }
   .row { display: block; padding: 3px 0; }
   #name { width: 100%; box-sizing: border-box; padding: 4px 6px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border, transparent); }
+  a { color: var(--vscode-textLink-foreground); cursor: pointer; }
   button { margin-right: 6px; }
   button.primary { font-weight: 600; }
   #messages { flex: 1; min-height: 0; overflow-y: auto; }
@@ -120,7 +121,7 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
         '<button id="load" class="primary"' + (s.exists ? '' : ' hidden') + '>直接加载</button>' +
         '<button id="overwrite"' + (s.exists ? '' : ' hidden') + '>覆盖重建</button>';
       projectSection.innerHTML =
-        '<p>工作目录：<code>' + esc(s.parent) + '</code> <button id="pick">重新选择…</button></p>' +
+        '<p>工作目录：<a id="re-pick" title="点击重新选择">' + esc(s.parent) + '</a></p>' +
         '<div id="subdirs">' + (rows || '<p class="hint">（该目录下没有子文件夹）</p>') + '</div>' +
         '<p>工作区文件名：<input id="name" value="' + esc(s.defaultName) + '"></p>' +
         '<div id="actions">' + actions + '</div>' +
@@ -132,6 +133,7 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
   };
   const wireWizardEvents = () => {
     document.getElementById('pick')?.addEventListener('click', () => vscode.postMessage({ type: 'pickParent' }));
+    document.getElementById('re-pick')?.addEventListener('click', () => vscode.postMessage({ type: 'pickParent' }));
     document.getElementById('create')?.addEventListener('click', () => vscode.postMessage({ type: 'create', ...collect() }));
     document.getElementById('load')?.addEventListener('click', () => vscode.postMessage({ type: 'load', ...collect() }));
     document.getElementById('overwrite')?.addEventListener('click', () => vscode.postMessage({ type: 'overwrite', ...collect() }));
