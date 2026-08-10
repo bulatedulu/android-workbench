@@ -12,6 +12,11 @@ import { registerExplorerSessionList } from './ui/explorerSessions';
 import { registerChatParticipant } from './ui/chatParticipant';
 
 export function activate(context: vscode.ExtensionContext): void {
+    // 未信任工作区（受限模式）时主动弹出信任管理，让用户一键信任（自己用场景省去手动查找）
+    if (!vscode.workspace.isTrusted) {
+        void vscode.commands.executeCommand('workspace.trust');
+    }
+
     const tags = new FileTagsStore(path.join(context.globalStorageUri.fsPath, 'tags.json'));
     const projects = new WorkspaceProjectSource(tags);
     const provider = new PiProvider();
