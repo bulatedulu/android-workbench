@@ -190,6 +190,8 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
     else if (msg.type === 'chat') { addChat(msg.role === 'assistant' ? 'assistant' : 'system', msg.text); }
     else if (msg.type === 'phase') { showPhase(msg.phase); }
   });
+  // 初始元素由服务端渲染，加载后立即绑定事件（否则首次打开点击无反应）
+  wireWizardEvents();
   vscode.postMessage({ type: 'ready' });
 </script>
 </body>

@@ -81,6 +81,8 @@ describe('buildAssistantViewHtml', () => {
         expect(html).toContain("vscode.postMessage({ type: 'pickParent' })");
         expect(html).toContain("vscode.postMessage({ type: 'dirChanged', dir: dirInput.value.trim() })");
         expect(html).toContain("vscode.postMessage({ type: 'send', text })");
+        // 初始元素由服务端渲染，加载后必须立即绑定事件（否则首次打开点击无反应）
+        expect(html).toMatch(/wireWizardEvents\(\);\s*\n\s*vscode\.postMessage\(\{ type: 'ready' \}\)/);
     });
 
     it('子文件夹名做 HTML 转义（防注入）', () => {
