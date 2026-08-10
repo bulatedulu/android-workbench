@@ -7,7 +7,6 @@ function state(overrides: Partial<AssistantWizardState> = {}): AssistantWizardSt
         subdirs: [],
         selected: [],
         defaultName: 'bug_list.code-workspace',
-        exists: false,
         ...overrides
     };
 }
@@ -44,8 +43,7 @@ describe('buildAssistantViewHtml', () => {
                 parent: 'D:\\bug_list',
                 subdirs: ['D:\\bug_list\\BUG-1', 'D:\\bug_list\\BUG-2', 'D:\\bug_list\\BUG-3'],
                 selected: ['D:\\bug_list\\BUG-1', 'D:\\bug_list\\BUG-3'],
-                defaultName: 'bug_list.code-workspace',
-                exists: false
+                defaultName: 'bug_list.code-workspace'
             })
         );
         expect(html).toContain('id="dir"');
@@ -60,16 +58,20 @@ describe('buildAssistantViewHtml', () => {
         expect(html).toMatch(/value="D:\\bug_list\\BUG-1"[^>]*checked/);
         expect(html).not.toMatch(/value="D:\\bug_list\\BUG-2"[^>]*checked/);
         expect(html).toMatch(/value="D:\\bug_list\\BUG-3"[^>]*checked/);
-        expect(html).toContain('确认并进入聊天');
+        expect(html).toContain('<button id="create" class="primary">确认并进入聊天</button>');
     });
 
-    it('文件已存在时显示「直接加载」「覆盖重建」，确认按钮隐藏', () => {
+    it('始终只有「确认并进入聊天」按钮：无覆盖重建/直接加载，也无存在提示', () => {
         const html = buildAssistantViewHtml(
-            state({ parent: 'D:\\bug_list', subdirs: ['D:\\bug_list\\BUG-1'], exists: true })
+            state({ parent: 'D:\\bug_list', subdirs: ['D:\\bug_list\\BUG-1'] })
         );
-        expect(html).toContain('<button id="load" class="primary">直接加载</button>');
-        expect(html).toContain('<button id="overwrite">覆盖重建</button>');
-        expect(html).toContain('<button id="create" class="primary" hidden>确认并进入聊天</button>');
+        expect(html).toContain('<button id="create" class="primary">确认并进入聊天</button>');
+        expect(html).not.toContain('id="load"');
+        expect(html).not.toContain('id="overwrite"');
+        expect(html).not.toContain('覆盖重建');
+        expect(html).not.toContain('直接加载');
+        expect(html).not.toContain('该工作区文件已存在');
+        expect(html).not.toContain('exists-hint');
     });
 
     it('包含阶段切换与消息处理脚本', () => {
@@ -81,7 +83,9 @@ describe('buildAssistantViewHtml', () => {
         expect(html).toContain("msg.type === 'focusDir'");
         expect(html).toContain("vscode.postMessage({ type: 'pickParent' })");
         expect(html).toContain("vscode.postMessage({ type: 'dirChanged', dir: dirInput.value.trim() })");
+        expect(html).toContain("vscode.postMessage({ type: 'create', ...collect() })");
         expect(html).toContain("vscode.postMessage({ type: 'send', text })");
+        expect(html).not.toContain('nameChanged');
         // 初始元素由服务端渲染，加载后必须立即绑定事件（否则首次打开点击无反应）
         expect(html).toMatch(/wireWizardEvents\(\);\s*\n\s*vscode\.postMessage\(\{ type: 'ready' \}\)/);
     });

@@ -1,13 +1,12 @@
 import { escapeHtml } from './html';
 import { NEW_ISSUE_COMMAND } from './messages';
 
-/** 引导界面状态（父目录 + 子文件夹 + 预勾选 + 文件名 + 文件是否存在）。 */
+/** 引导界面状态（工作目录 + 子文件夹 + 预勾选 + 文件名）。 */
 export interface AssistantWizardState {
     parent: string | undefined;
     subdirs: string[];
     selected: string[];
     defaultName: string;
-    exists: boolean;
 }
 
 /** Webview → 宿主的消息（判别联合）。 */
@@ -15,21 +14,17 @@ export type AssistantViewMessage =
     | { type: 'ready' }
     | { type: 'pickParent' }
     | { type: 'dirChanged'; dir: string }
-    | { type: 'nameChanged'; name: string }
     | { type: 'create'; folders: string[]; name: string }
-    | { type: 'load'; name: string }
-    | { type: 'overwrite'; folders: string[]; name: string }
     | { type: 'send'; text: string };
 
 /** 宿主 → Webview 的消息（判别联合）。 */
 export type AssistantHostMessage =
     | { type: 'wizardState'; state: AssistantWizardState }
-    | { type: 'exists'; exists: boolean }
     | { type: 'focusDir' }
     | { type: 'chat'; role: 'assistant' | 'system'; text: string }
     | { type: 'phase'; phase: 'wizard' | 'chat' };
 
-/** 引导区表单（工作目录输入框 / 子文件夹勾选 / 文件名 / 按钮）。 */
+/** 引导区表单（工作目录输入框 / 子文件夹勾选 / 文件名 / 确认按钮）。 */
 function renderProjectSection(state: AssistantWizardState): string {
     const dirBox =
         `<input id="dir" placeholder="点击选择，或 Tab 聚焦后直接输入…" value="${escapeHtml(state.parent ?? '')}" title="点击弹出目录选择器；Tab 聚焦后可直接输入路径">`;
@@ -43,16 +38,11 @@ function renderProjectSection(state: AssistantWizardState): string {
             return `<label class="row"><input type="checkbox" value="${escapeHtml(d)}"${checked}> ${escapeHtml(name)}</label>`;
         })
         .join('');
-    const actions =
-        `<button id="create" class="primary"${state.exists ? ' hidden' : ''}>确认并进入聊天</button>` +
-        `<button id="load" class="primary"${state.exists ? '' : ' hidden'}>直接加载</button>` +
-        `<button id="overwrite"${state.exists ? '' : ' hidden'}>覆盖重建</button>`;
     return (
         dirBox +
         `<div id="subdirs">${rows || '<p class="hint">（该目录下没有子文件夹）</p>'}</div>` +
         `<p>工作区文件名：<input id="name" value="${escapeHtml(state.defaultName)}"></p>` +
-        `<div id="actions">${actions}</div>` +
-        `<p id="exists-hint" class="hint"${state.exists ? '' : ' hidden'}>该工作区文件已存在：可直接加载，或覆盖重建（会改写文件）。</p>`
+        `<button id="create" class="primary">确认并进入聊天</button>`
     );
 }
 
@@ -101,17 +91,8 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
 </div>
 <script>
   const vscode = acquireVsCodeApi();
-  let exists = ${state.exists ? 'true' : 'false'};
   const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const projectSection = document.getElementById('project-section');
-  const showButtons = () => {
-    const create = document.getElementById('create');
-    if (!create) { return; }
-    create.hidden = exists;
-    document.getElementById('load').hidden = !exists;
-    document.getElementById('overwrite').hidden = !exists;
-    document.getElementById('exists-hint').hidden = !exists;
-  };
   const renderWizard = (s) => {
     const dirBox =
       '<input id="dir" placeholder="点击选择，或 Tab 聚焦后直接输入…" value="' + esc(s.parent || '') + '" title="点击弹出目录选择器；Tab 聚焦后可直接输入路径">';
@@ -123,20 +104,13 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
         const checked = (s.selected || []).includes(d) ? ' checked' : '';
         return '<label class="row"><input type="checkbox" value="' + esc(d) + '"' + checked + '> ' + esc(name) + '</label>';
       }).join('');
-      const actions =
-        '<button id="create" class="primary"' + (s.exists ? ' hidden' : '') + '>确认并进入聊天</button>' +
-        '<button id="load" class="primary"' + (s.exists ? '' : ' hidden') + '>直接加载</button>' +
-        '<button id="overwrite"' + (s.exists ? '' : ' hidden') + '>覆盖重建</button>';
       projectSection.innerHTML =
         dirBox +
         '<div id="subdirs">' + (rows || '<p class="hint">（该目录下没有子文件夹）</p>') + '</div>' +
         '<p>工作区文件名：<input id="name" value="' + esc(s.defaultName) + '"></p>' +
-        '<div id="actions">' + actions + '</div>' +
-        '<p id="exists-hint" class="hint"' + (s.exists ? '' : ' hidden') + '>该工作区文件已存在：可直接加载，或覆盖重建（会改写文件）。</p>';
+        '<button id="create" class="primary">确认并进入聊天</button>';
     }
-    exists = !!s.exists;
     wireWizardEvents();
-    showButtons();
   };
   const wireWizardEvents = () => {
     const dirInput = document.getElementById('dir');
@@ -146,9 +120,6 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
       dirInput.addEventListener('change', () => vscode.postMessage({ type: 'dirChanged', dir: dirInput.value.trim() }));
     }
     document.getElementById('create')?.addEventListener('click', () => vscode.postMessage({ type: 'create', ...collect() }));
-    document.getElementById('load')?.addEventListener('click', () => vscode.postMessage({ type: 'load', ...collect() }));
-    document.getElementById('overwrite')?.addEventListener('click', () => vscode.postMessage({ type: 'overwrite', ...collect() }));
-    document.getElementById('name')?.addEventListener('input', (e) => vscode.postMessage({ type: 'nameChanged', name: e.target.value }));
   };
   const collect = () => {
     const folders = Array.from(document.querySelectorAll('#subdirs input:checked')).map((i) => i.value);
@@ -181,7 +152,6 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
     const msg = e.data;
     if (!msg) { return; }
     if (msg.type === 'wizardState') { renderWizard(msg.state); }
-    else if (msg.type === 'exists') { exists = !!msg.exists; showButtons(); }
     else if (msg.type === 'focusDir') { document.getElementById('dir')?.focus(); }
     else if (msg.type === 'chat') { addChat(msg.role === 'assistant' ? 'assistant' : 'system', msg.text); }
     else if (msg.type === 'phase') { showPhase(msg.phase); }

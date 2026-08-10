@@ -75,7 +75,7 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
     private wizardState(config: AssistantConfig): AssistantWizardState {
         const parent = config.parent ?? this.parent;
         if (!parent) {
-            return { parent: undefined, subdirs: [], selected: [], defaultName: '', exists: false };
+            return { parent: undefined, subdirs: [], selected: [], defaultName: '' };
         }
         const subdirs = listSubdirectories(parent);
         const saved = config.folders.filter((f) => subdirs.includes(f));
@@ -85,8 +85,7 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
             parent,
             subdirs,
             selected,
-            defaultName,
-            exists: fs.existsSync(resolveWorkspaceFile(parent, defaultName))
+            defaultName
         };
     }
 
@@ -155,16 +154,7 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
                 });
                 break;
             }
-            case 'nameChanged': {
-                if (!this.parent) {
-                    break;
-                }
-                const exists = fs.existsSync(resolveWorkspaceFile(this.parent, message.name));
-                this.post({ type: 'exists', exists });
-                break;
-            }
-            case 'create':
-            case 'overwrite': {
+            case 'create': {
                 if (!this.parent) {
                     break;
                 }
@@ -173,45 +163,9 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
                     void vscode.window.showErrorMessage('请至少选择一个项目文件夹。');
                     break;
                 }
+                // 同名直接覆盖写入 .code-workspace（不弹确认）
                 const file = resolveWorkspaceFile(this.parent, message.name);
-                const exists = fs.existsSync(file);
-                if (exists) {
-                    if (message.type === 'create') {
-                        const answer = await vscode.window.showWarningMessage(
-                            `工作区文件已存在：${path.basename(file)}`,
-                            { modal: true },
-                            '直接加载',
-                            '覆盖'
-                        );
-                        if (answer === '直接加载') {
-                            this.enterChat(this.readFoldersFromFile(file), path.basename(file));
-                            break;
-                        }
-                        if (answer !== '覆盖') {
-                            break;
-                        }
-                    } else {
-                        const answer = await vscode.window.showWarningMessage(
-                            `确定覆盖重建 ${path.basename(file)}？将改写该工作区文件。`,
-                            { modal: true },
-                            '覆盖'
-                        );
-                        if (answer !== '覆盖') {
-                            break;
-                        }
-                    }
-                }
                 this.writeAndEnter(file, folders);
-                break;
-            }
-            case 'load': {
-                if (!this.parent) {
-                    break;
-                }
-                const file = resolveWorkspaceFile(this.parent, message.name);
-                if (fs.existsSync(file)) {
-                    this.enterChat(this.readFoldersFromFile(file), path.basename(file));
-                }
                 break;
             }
             case 'send': {
@@ -233,19 +187,6 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
         fs.mkdirSync(path.dirname(file), { recursive: true });
         fs.writeFileSync(file, buildWorkspaceFileContent(folders), 'utf8');
         this.enterChat(folders, path.basename(file));
-    }
-
-    /** 读取 .code-workspace 里的文件夹列表（容错：解析失败返回空）。 */
-    private readFoldersFromFile(file: string): string[] {
-        try {
-            const data = JSON.parse(fs.readFileSync(file, 'utf8')) as { folders?: { path?: string }[] };
-            if (!Array.isArray(data.folders)) {
-                return [];
-            }
-            return data.folders.map((f) => String(f?.path ?? '')).filter(Boolean);
-        } catch {
-            return [];
-        }
     }
 
     private enterChat(folders: string[], name: string): void {
