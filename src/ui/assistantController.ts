@@ -38,7 +38,7 @@ export class AssistantController {
     private pending: PendingChat[] = [];
     private parent: string | undefined;
 
-    constructor(private readonly host: AssistantHost) {}
+    constructor(private readonly host: AssistantHost) { }
 
     private readConfig(): AssistantConfig {
         return readAssistantConfig(this.host.context.globalState);
