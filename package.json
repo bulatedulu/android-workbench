@@ -51,23 +51,11 @@
                 "icon": "$(sparkle)"
             },
             {
-                "command": "aiWorkbench.openWizardWindow",
-                "title": "AI 工作台：打开引导窗口",
-                "icon": "$(window)"
-            },
-            {
                 "command": "aiWorkbench.explorerSessionList",
                 "title": "AI 工作台：查看会话列表"
             }
         ],
         "menus": {
-            "view/title": [
-                {
-                    "command": "aiWorkbench.openWizardWindow",
-                    "when": "view == aiWorkbench.assistant",
-                    "group": "navigation"
-                }
-            ],
             "explorer/context": [
                 {
                     "command": "aiWorkbench.explorerSessionList",
