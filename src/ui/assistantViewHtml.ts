@@ -68,6 +68,10 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
   a { color: var(--vscode-textLink-foreground); cursor: pointer; }
   button { margin-right: 6px; }
   button.primary { font-weight: 600; }
+  /* 引导界面：居中模态卡片（全屏遮罩 + 居中卡片） */
+  .wizard { align-items: center; justify-content: center; background: rgba(0,0,0,0.35); }
+  .modal-card { width: 440px; max-width: 92%; background: var(--vscode-editor-background); border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border)); border-radius: 8px; padding: 18px 22px; box-shadow: 0 8px 28px rgba(0,0,0,0.45); }
+  .modal-card h2 { font-size: 15px; }
   #messages { flex: 1; min-height: 0; overflow-y: auto; }
   .msg { margin-bottom: 8px; padding: 6px 8px; border-radius: 4px; white-space: pre-wrap; word-break: break-word; font-size: 12px; }
   .msg.user { background: var(--vscode-textBlockQuote-background, rgba(127,127,127,0.15)); }
@@ -78,9 +82,11 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
 </style>
 </head>
 <body>
-<div id="wizard-section" class="section">
-  <h2>选择工作目录</h2>
-  <div id="project-section">${renderProjectSection(state)}</div>
+<div id="wizard-section" class="section wizard">
+  <div id="wizard-card" class="modal-card">
+    <h2>选择工作目录</h2>
+    <div id="project-section">${renderProjectSection(state)}</div>
+  </div>
 </div>
 <div id="chat-section" class="section" hidden>
   <div id="messages"></div>
