@@ -1,8 +1,13 @@
 import * as vscode from 'vscode';
 import { AssistantController, AssistantHost } from './assistantController';
 import { AssistantViewMessage } from './assistantViewHtml';
+import {
+    openAssistantFullscreen,
+    closeAssistantFullscreen,
+    isAssistantFullscreenOpen
+} from './assistantPanel';
 
-/** 注册侧边栏「助手」入口视图（活动栏图标 → 窄栏入口，可点标题栏按钮打开全屏工作台）。 */
+/** 注册侧边栏「助手」入口视图：点活动栏图标 = 切换全屏工作台（开/关）。 */
 export function registerAssistantView(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(
@@ -15,6 +20,8 @@ export function registerAssistantView(context: vscode.ExtensionContext): void {
 
 class AssistantViewProvider implements vscode.WebviewViewProvider {
     private controller: AssistantController | undefined;
+    /** 主动收起侧边栏时置位，避免触发「用户收起 → 关全屏」。 */
+    private autoClosingSidebar = false;
 
     constructor(private readonly context: vscode.ExtensionContext) {}
 
@@ -36,9 +43,33 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
         });
         webviewView.onDidChangeVisibility(() => {
             if (webviewView.visible) {
-                controller.showInitialPhase();
+                // 点活动栏图标展开容器 → 切换全屏工作台，然后收起侧边栏（视觉上只开关全屏）
+                this.toggleFullscreenAndCloseSidebar();
+            } else {
+                // 用户主动收起侧边栏 → 关闭全屏工作台
+                if (!this.autoClosingSidebar) {
+                    closeAssistantFullscreen();
+                }
             }
         });
+        if (webviewView.visible) {
+            this.toggleFullscreenAndCloseSidebar();
+        }
+    }
+
+    private toggleFullscreenAndCloseSidebar(): void {
+        if (isAssistantFullscreenOpen()) {
+            closeAssistantFullscreen();
+        } else {
+            openAssistantFullscreen(this.context);
+        }
+        // 收起侧边栏，让「点图标 = 全屏开关」的视觉成立（侧边栏只是瞬间载体）
+        this.autoClosingSidebar = true;
+        void vscode.commands
+            .executeCommand('workbench.action.toggleSidebarVisibility')
+            .then(() => {
+                this.autoClosingSidebar = false;
+            });
     }
 }
 

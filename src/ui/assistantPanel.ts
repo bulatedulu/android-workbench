@@ -3,8 +3,14 @@ import { AssistantController, AssistantHost } from './assistantController';
 import { AssistantViewMessage } from './assistantViewHtml';
 import { hideEditorTabsWhileOpen } from './editorTabs';
 
+let currentPanel: vscode.WebviewPanel | undefined;
+
 /** 打开编辑器区域全屏「工作台」面板：占满编辑区、隐藏标签栏（无顶部标签）、不影响辅助侧边栏。 */
 export function openAssistantFullscreen(context: vscode.ExtensionContext): void {
+    if (currentPanel) {
+        currentPanel.reveal(vscode.ViewColumn.One, true);
+        return;
+    }
     const panel = vscode.window.createWebviewPanel(
         'aiWorkbench.assistantFullscreen',
         'AI 工作台助手',
@@ -31,4 +37,23 @@ export function openAssistantFullscreen(context: vscode.ExtensionContext): void 
         undefined,
         context.subscriptions
     );
+    panel.onDidDispose(() => {
+        if (currentPanel === panel) {
+            currentPanel = undefined;
+        }
+    });
+    currentPanel = panel;
+}
+
+/** 关闭全屏「工作台」面板。 */
+export function closeAssistantFullscreen(): void {
+    if (currentPanel) {
+        currentPanel.dispose();
+        currentPanel = undefined;
+    }
+}
+
+/** 全屏面板是否已打开。 */
+export function isAssistantFullscreenOpen(): boolean {
+    return currentPanel !== undefined;
 }
