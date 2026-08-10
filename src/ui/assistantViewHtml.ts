@@ -27,10 +27,10 @@ export type AssistantHostMessage =
     | { type: 'chat'; role: 'assistant' | 'system'; text: string }
     | { type: 'phase'; phase: 'wizard' | 'chat' };
 
-/** 引导区表单（父目录行 / 子文件夹勾选 / 文件名 / 按钮）。 */
+/** 引导区表单（工作目录行 / 子文件夹勾选 / 文件名 / 按钮）。 */
 function renderProjectSection(state: AssistantWizardState): string {
     if (!state.parent) {
-        return '<button id="pick" class="primary">选择父目录…</button>';
+        return '<button id="pick" class="primary">选择工作目录…</button>';
     }
     const rows = state.subdirs
         .map((d) => {
@@ -44,7 +44,7 @@ function renderProjectSection(state: AssistantWizardState): string {
         `<button id="load" class="primary"${state.exists ? '' : ' hidden'}>直接加载</button>` +
         `<button id="overwrite"${state.exists ? '' : ' hidden'}>覆盖重建</button>`;
     return (
-        `<p>父目录：<code>${escapeHtml(state.parent)}</code></p>` +
+        `<p>工作目录：<code>${escapeHtml(state.parent)}</code> <button id="pick">重新选择…</button></p>` +
         `<div id="subdirs">${rows || '<p class="hint">（该目录下没有子文件夹）</p>'}</div>` +
         `<p>工作区文件名：<input id="name" value="${escapeHtml(state.defaultName)}"></p>` +
         `<div id="actions">${actions}</div>` +
@@ -72,8 +72,6 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
   #name { width: 100%; box-sizing: border-box; padding: 4px 6px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border, transparent); }
   button { margin-right: 6px; }
   button.primary { font-weight: 600; }
-  .chat-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--vscode-panel-border); padding-bottom: 6px; margin-bottom: 8px; }
-  .chat-head b { font-size: 12px; }
   #messages { flex: 1; min-height: 0; overflow-y: auto; }
   .msg { margin-bottom: 8px; padding: 6px 8px; border-radius: 4px; white-space: pre-wrap; word-break: break-word; font-size: 12px; }
   .msg.user { background: var(--vscode-textBlockQuote-background, rgba(127,127,127,0.15)); }
@@ -85,13 +83,10 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
 </head>
 <body>
 <div id="wizard-section" class="section">
-  <h2>创建多根工作区</h2>
+  <h2>选择工作目录</h2>
   <div id="project-section">${renderProjectSection(state)}</div>
 </div>
 <div id="chat-section" class="section" hidden>
-  <div class="chat-head">
-    <b>AI 工作台助手</b>
-  </div>
   <div id="messages"></div>
   <div id="input-row">
     <input id="input" placeholder="输入「${NEW_ISSUE_COMMAND}」创建新问题工作区（BUG-N），或输入其他指令…">
@@ -113,7 +108,7 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
   };
   const renderWizard = (s) => {
     if (!s.parent) {
-      projectSection.innerHTML = '<button id="pick" class="primary">选择父目录…</button>';
+      projectSection.innerHTML = '<button id="pick" class="primary">选择工作目录…</button>';
     } else {
       const rows = (s.subdirs || []).map((d) => {
         const name = d.split(/[\\\\/]/).filter(Boolean).pop() ?? d;
@@ -125,7 +120,7 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
         '<button id="load" class="primary"' + (s.exists ? '' : ' hidden') + '>直接加载</button>' +
         '<button id="overwrite"' + (s.exists ? '' : ' hidden') + '>覆盖重建</button>';
       projectSection.innerHTML =
-        '<p>父目录：<code>' + esc(s.parent) + '</code></p>' +
+        '<p>工作目录：<code>' + esc(s.parent) + '</code> <button id="pick">重新选择…</button></p>' +
         '<div id="subdirs">' + (rows || '<p class="hint">（该目录下没有子文件夹）</p>') + '</div>' +
         '<p>工作区文件名：<input id="name" value="' + esc(s.defaultName) + '"></p>' +
         '<div id="actions">' + actions + '</div>' +

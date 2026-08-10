@@ -123,7 +123,7 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
                     canSelectFiles: false,
                     canSelectFolders: true,
                     canSelectMany: false,
-                    openLabel: '选择项目存放目录'
+                    openLabel: '选择工作目录'
                 });
                 if (!folders || folders.length === 0) {
                     break;

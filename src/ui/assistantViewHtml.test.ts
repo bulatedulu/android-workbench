@@ -28,13 +28,15 @@ describe('buildAssistantViewHtml', () => {
         expect(html).toMatch(/\[hidden\]\s*\{\s*display:\s*none\s*!important/);
     });
 
-    it('未选父目录时包含选择按钮（初始渲染引导区）', () => {
+    it('未选目录时包含选择按钮（初始渲染引导区）', () => {
         const html = buildAssistantViewHtml(state());
         expect(html).toContain('id="pick"');
-        expect(html).toContain('选择父目录');
+        expect(html).toContain('选择工作目录');
+        expect(html).not.toContain('AI 工作台助手');
+        expect(html).not.toContain('创建多根工作区');
     });
 
-    it('选择父目录后列出子文件夹并回填勾选与文件名', () => {
+    it('选择工作目录后列出子文件夹并回填勾选与文件名，且可随时重新选择', () => {
         const html = buildAssistantViewHtml(
             state({
                 parent: 'D:\\bug_list',
@@ -45,6 +47,8 @@ describe('buildAssistantViewHtml', () => {
             })
         );
         expect(html).toContain('D:\\bug_list');
+        expect(html).toContain('工作目录');
+        expect(html).toContain('重新选择');
         expect(html).toContain('BUG-1');
         expect(html).toContain('BUG-2');
         expect(html).toContain('value="bug_list.code-workspace"');
