@@ -17,6 +17,11 @@ export function ensureWorkspaceExtension(name: string): string {
     return name.toLowerCase().endsWith('.code-workspace') ? name : `${name}.code-workspace`;
 }
 
+/** 工作区文件完整路径（父目录 + 确保 .code-workspace 扩展名）。 */
+export function resolveWorkspaceFile(parent: string, name: string): string {
+    return path.join(parent, ensureWorkspaceExtension(name));
+}
+
 /** 列出某目录下的直接子文件夹（绝对路径，按名排序）；目录不存在返回空数组。 */
 export function listSubdirectories(dir: string): string[] {
     let entries;

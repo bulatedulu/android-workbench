@@ -26,47 +26,13 @@
         "views": {
             "aiWorkbench": [
                 {
-                    "id": "aiWorkbench.projects",
-                    "name": "项目",
-                    "icon": "media/icon.svg"
+                    "id": "aiWorkbench.assistant",
+                    "name": "助手",
+                    "type": "webview"
                 }
             ]
         },
         "commands": [
-            {
-                "command": "aiWorkbench.openWorkbench",
-                "title": "AI 工作台：打开工作台"
-            },
-            {
-                "command": "aiWorkbench.addProject",
-                "title": "AI 工作台：添加项目",
-                "icon": "$(add)"
-            },
-            {
-                "command": "aiWorkbench.editTags",
-                "title": "AI 工作台：编辑标签",
-                "icon": "$(edit)"
-            },
-            {
-                "command": "aiWorkbench.removeProject",
-                "title": "AI 工作台：移除项目",
-                "icon": "$(trash)"
-            },
-            {
-                "command": "aiWorkbench.searchSessions",
-                "title": "AI 工作台：搜索会话",
-                "icon": "$(search)"
-            },
-            {
-                "command": "aiWorkbench.clearSearch",
-                "title": "AI 工作台：清除搜索",
-                "icon": "$(close)"
-            },
-            {
-                "command": "aiWorkbench.refresh",
-                "title": "AI 工作台：刷新",
-                "icon": "$(refresh)"
-            },
             {
                 "command": "aiWorkbench.createWorkspace",
                 "title": "AI 工作台：创建多根工作区",
@@ -83,50 +49,6 @@
             }
         ],
         "menus": {
-            "view/title": [
-                {
-                    "command": "aiWorkbench.addProject",
-                    "when": "view == aiWorkbench.projects",
-                    "group": "navigation"
-                },
-                {
-                    "command": "aiWorkbench.searchSessions",
-                    "when": "view == aiWorkbench.projects",
-                    "group": "navigation"
-                },
-                {
-                    "command": "aiWorkbench.clearSearch",
-                    "when": "view == aiWorkbench.projects",
-                    "group": "navigation"
-                },
-                {
-                    "command": "aiWorkbench.refresh",
-                    "when": "view == aiWorkbench.projects",
-                    "group": "navigation"
-                },
-                {
-                    "command": "aiWorkbench.createWorkspace",
-                    "when": "view == aiWorkbench.projects",
-                    "group": "navigation"
-                },
-                {
-                    "command": "aiWorkbench.openAssistant",
-                    "when": "view == aiWorkbench.projects",
-                    "group": "navigation"
-                }
-            ],
-            "view/item/context": [
-                {
-                    "command": "aiWorkbench.editTags",
-                    "when": "view == aiWorkbench.projects && viewItem == project",
-                    "group": "inline"
-                },
-                {
-                    "command": "aiWorkbench.removeProject",
-                    "when": "view == aiWorkbench.projects && viewItem == project",
-                    "group": "inline"
-                }
-            ],
             "explorer/context": [
                 {
                     "command": "aiWorkbench.explorerSessionList",
