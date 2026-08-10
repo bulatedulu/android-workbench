@@ -21,7 +21,6 @@ import {
     nextBugNumber,
     resolveProjectRoot
 } from '../domain/issueSpace';
-import { normalizePathForMatch } from '../domain/paths';
 import { NEW_ISSUE_COMMAND } from './messages';
 
 interface PendingChat {
@@ -51,7 +50,7 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
     resolveWebviewView(webviewView: vscode.WebviewView): void {
         this.view = webviewView;
         webviewView.webview.options = { enableScripts: true };
-        // 开发阶段：每次出现都回到引导界面，配置自动回填
+        // 初始渲染引导（配置回填）；有工作区文件时 ready 后切聊天
         this.renderWizard();
 
         webviewView.webview.onDidReceiveMessage((raw) => {
@@ -59,7 +58,7 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
         });
         webviewView.onDidChangeVisibility(() => {
             if (webviewView.visible) {
-                this.showWizard();
+                this.showInitialPhase();
             }
         });
     }
@@ -103,6 +102,15 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
         this.post({ type: 'wizardState', state: this.wizardState(this.readConfig()) });
     }
 
+    /** 有工作区文件时直接进聊天（openFolder 已重载，避免确认→重载→引导循环），否则回引导。 */
+    private showInitialPhase(): void {
+        if (vscode.workspace.workspaceFile) {
+            this.showChat();
+        } else {
+            this.showWizard();
+        }
+    }
+
     private showChat(): void {
         this.post({ type: 'phase', phase: 'chat' });
     }
@@ -115,6 +123,10 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
                     this.post({ type: 'chat', role: m.role, text: m.text });
                 }
                 this.pending = [];
+                // openFolder 重载后已有工作区：直接切到聊天
+                if (vscode.workspace.workspaceFile) {
+                    this.showChat();
+                }
                 break;
             }
             case 'pickParent': {
@@ -163,9 +175,9 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
                     void vscode.window.showErrorMessage('请至少选择一个项目文件夹。');
                     break;
                 }
-                // 同名直接覆盖写入 .code-workspace（不弹确认）
+                // 同名直接覆盖写入 .code-workspace，然后打开有名字的工作区（重载窗口）
                 const file = resolveWorkspaceFile(this.parent, message.name);
-                this.writeAndEnter(file, folders);
+                this.confirmAndOpen(file, folders);
                 break;
             }
             case 'send': {
@@ -183,34 +195,15 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
         }
     }
 
-    private writeAndEnter(file: string, folders: string[]): void {
+    /** 写 .code-workspace + 保存配置 + 打开有名字的工作区（重载窗口）。 */
+    private confirmAndOpen(file: string, folders: string[]): void {
         fs.mkdirSync(path.dirname(file), { recursive: true });
         fs.writeFileSync(file, buildWorkspaceFileContent(folders), 'utf8');
-        this.enterChat(folders, path.basename(file));
-    }
-
-    private enterChat(folders: string[], name: string): void {
-        const config: AssistantConfig = { parent: this.parent, folders, name };
+        const config: AssistantConfig = { parent: this.parent, folders, name: path.basename(file) };
         void writeAssistantConfig(this.context.globalState, config);
-        this.addFoldersToWorkspace(folders);
-        this.showChat();
         void vscode.window.showInformationMessage('初始化已完成。');
-    }
-
-    /** 把文件夹加入当前工作区（不重载窗口）。一次调用添加全部：空工作区逐个添加会先变单文件夹、后续失败。 */
-    private addFoldersToWorkspace(folders: string[]): void {
-        const existing = new Set(
-            (vscode.workspace.workspaceFolders ?? []).map((f) => normalizePathForMatch(f.uri.fsPath))
-        );
-        const toAdd = folders.filter((f) => !existing.has(normalizePathForMatch(f)));
-        if (toAdd.length === 0) {
-            return;
-        }
-        vscode.workspace.updateWorkspaceFolders(
-            vscode.workspace.workspaceFolders?.length ?? 0,
-            0,
-            ...toAdd.map((f) => ({ uri: vscode.Uri.file(f) }))
-        );
+        // 打开有名字的工作区；重载后 workspaceFile 存在，侧边栏直接进聊天
+        void vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(file));
     }
 
     private postChat(role: 'assistant' | 'system', text: string): void {
