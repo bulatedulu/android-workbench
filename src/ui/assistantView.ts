@@ -126,6 +126,7 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
                     openLabel: '选择工作目录'
                 });
                 if (!folders || folders.length === 0) {
+                    this.post({ type: 'focusDir' });
                     break;
                 }
                 this.parent = folders[0].fsPath;
@@ -136,6 +137,22 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
                         ? saved
                         : { parent: this.parent, folders: [], name: '' };
                 this.post({ type: 'wizardState', state: this.wizardState(config) });
+                break;
+            }
+            case 'dirChanged': {
+                const dir = (message.dir ?? '').trim();
+                if (!dir) {
+                    break;
+                }
+                if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
+                    void vscode.window.showErrorMessage(`目录不存在：${dir}`);
+                    break;
+                }
+                this.parent = dir;
+                this.post({
+                    type: 'wizardState',
+                    state: this.wizardState({ parent: dir, folders: [], name: '' })
+                });
                 break;
             }
             case 'nameChanged': {

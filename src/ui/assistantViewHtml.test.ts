@@ -28,15 +28,17 @@ describe('buildAssistantViewHtml', () => {
         expect(html).toMatch(/\[hidden\]\s*\{\s*display:\s*none\s*!important/);
     });
 
-    it('未选目录时包含选择按钮（初始渲染引导区）', () => {
+    it('未选目录时显示工作目录输入框（可点击选择/可输入）', () => {
         const html = buildAssistantViewHtml(state());
-        expect(html).toContain('id="pick"');
-        expect(html).toContain('选择工作目录');
+        expect(html).toContain('id="dir"');
+        expect(html).toContain('点击选择');
+        expect(html).toContain('Tab 聚焦');
+        expect(html).not.toContain('id="pick"');
         expect(html).not.toContain('AI 工作台助手');
         expect(html).not.toContain('创建多根工作区');
     });
 
-    it('选择工作目录后列出子文件夹并回填勾选与文件名，且可随时重新选择', () => {
+    it('工作目录输入框回填路径，并列出子文件夹勾选与文件名', () => {
         const html = buildAssistantViewHtml(
             state({
                 parent: 'D:\\bug_list',
@@ -46,11 +48,10 @@ describe('buildAssistantViewHtml', () => {
                 exists: false
             })
         );
-        expect(html).toContain('D:\\bug_list');
+        expect(html).toContain('id="dir"');
+        expect(html).toContain('value="D:\\bug_list"');
         expect(html).toContain('工作目录');
-        expect(html).toContain('id="re-pick"');
-        expect(html).toContain('点击重新选择');
-        expect(html).not.toContain('重新选择…');
+        expect(html).not.toContain('id="re-pick"');
         expect(html).toContain('BUG-1');
         expect(html).toContain('BUG-2');
         expect(html).toContain('value="bug_list.code-workspace"');
@@ -76,7 +77,9 @@ describe('buildAssistantViewHtml', () => {
         expect(html).toContain("msg.type === 'wizardState'");
         expect(html).toContain("msg.type === 'chat'");
         expect(html).toContain("msg.type === 'phase'");
+        expect(html).toContain("msg.type === 'focusDir'");
         expect(html).toContain("vscode.postMessage({ type: 'pickParent' })");
+        expect(html).toContain("vscode.postMessage({ type: 'dirChanged', dir: dirInput.value.trim() })");
         expect(html).toContain("vscode.postMessage({ type: 'send', text })");
     });
 
