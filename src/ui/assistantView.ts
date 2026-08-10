@@ -194,7 +194,7 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
         void writeAssistantConfig(this.context.globalState, config);
         this.addFoldersToWorkspace(folders);
         this.showChat();
-        this.postChat('system', `已就绪。项目存放根目录：${this.parent ?? '（未设置）'}。输入「${NEW_ISSUE_COMMAND}」创建 BUG-N。`);
+        void vscode.window.showInformationMessage('初始化已完成。');
     }
 
     /** 把文件夹增量加入当前工作区（不重载窗口）。 */
