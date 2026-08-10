@@ -20,7 +20,6 @@ describe('buildAssistantViewHtml', () => {
         expect(html).toContain('id="messages"');
         expect(html).toContain('id="input"');
         expect(html).toContain('id="send"');
-        expect(html).toContain('id="back-to-wizard"');
     });
 
     it('未选父目录时包含选择按钮（初始渲染引导区）', () => {
@@ -67,7 +66,6 @@ describe('buildAssistantViewHtml', () => {
         expect(html).toContain("msg.type === 'phase'");
         expect(html).toContain("vscode.postMessage({ type: 'pickParent' })");
         expect(html).toContain("vscode.postMessage({ type: 'send', text })");
-        expect(html).toContain("vscode.postMessage({ type: 'backToWizard' })");
     });
 
     it('子文件夹名做 HTML 转义（防注入）', () => {

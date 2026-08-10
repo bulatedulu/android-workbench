@@ -18,7 +18,6 @@ export type AssistantViewMessage =
     | { type: 'create'; folders: string[]; name: string }
     | { type: 'load'; name: string }
     | { type: 'overwrite'; folders: string[]; name: string }
-    | { type: 'backToWizard' }
     | { type: 'send'; text: string };
 
 /** 宿主 → Webview 的消息（判别联合）。 */
@@ -90,7 +89,6 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
 <div id="chat-section" class="section" hidden>
   <div class="chat-head">
     <b>AI 工作台助手</b>
-    <button id="back-to-wizard">返回引导</button>
   </div>
   <div id="messages"></div>
   <div id="input-row">
@@ -165,7 +163,6 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
   };
   document.getElementById('send').addEventListener('click', send);
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { send(); } });
-  document.getElementById('back-to-wizard').addEventListener('click', () => vscode.postMessage({ type: 'backToWizard' }));
   const showPhase = (phase) => {
     document.getElementById('wizard-section').hidden = phase !== 'wizard';
     document.getElementById('chat-section').hidden = phase !== 'chat';

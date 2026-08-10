@@ -197,10 +197,6 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
                 }
                 break;
             }
-            case 'backToWizard': {
-                this.showWizard();
-                break;
-            }
             case 'send': {
                 const text = (message.text ?? '').trim();
                 if (!text) {
