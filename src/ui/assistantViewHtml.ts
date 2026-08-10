@@ -32,9 +32,7 @@ export type AssistantHostMessage =
 /** 引导区表单（工作目录输入框 / 子文件夹勾选 / 文件名 / 按钮）。 */
 function renderProjectSection(state: AssistantWizardState): string {
     const dirBox =
-        `<p>工作目录：</p>` +
-        `<input id="dir" placeholder="点击选择，或 Tab 聚焦后直接输入…" value="${escapeHtml(state.parent ?? '')}" title="点击弹出目录选择器；Tab 聚焦后可直接输入路径">` +
-        `<p class="hint">点击输入框弹出目录选择器；Tab 聚焦后可直接输入路径。</p>`;
+        `<input id="dir" placeholder="点击选择，或 Tab 聚焦后直接输入…" value="${escapeHtml(state.parent ?? '')}" title="点击弹出目录选择器；Tab 聚焦后可直接输入路径">`;
     if (!state.parent) {
         return dirBox;
     }
@@ -116,9 +114,7 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
   };
   const renderWizard = (s) => {
     const dirBox =
-      '<p>工作目录：</p>' +
-      '<input id="dir" placeholder="点击选择，或 Tab 聚焦后直接输入…" value="' + esc(s.parent || '') + '" title="点击弹出目录选择器；Tab 聚焦后可直接输入路径">' +
-      '<p class="hint">点击输入框弹出目录选择器；Tab 聚焦后可直接输入路径。</p>';
+      '<input id="dir" placeholder="点击选择，或 Tab 聚焦后直接输入…" value="' + esc(s.parent || '') + '" title="点击弹出目录选择器；Tab 聚焦后可直接输入路径">';
     if (!s.parent) {
       projectSection.innerHTML = dirBox;
     } else {

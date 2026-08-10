@@ -50,8 +50,9 @@ describe('buildAssistantViewHtml', () => {
         );
         expect(html).toContain('id="dir"');
         expect(html).toContain('value="D:\\bug_list"');
-        expect(html).toContain('工作目录');
         expect(html).not.toContain('id="re-pick"');
+        expect(html).not.toContain('工作目录：');
+        expect(html).not.toContain('点击输入框弹出目录选择器');
         expect(html).toContain('BUG-1');
         expect(html).toContain('BUG-2');
         expect(html).toContain('value="bug_list.code-workspace"');
