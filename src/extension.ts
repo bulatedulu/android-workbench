@@ -12,9 +12,15 @@ import { registerExplorerSessionList } from './ui/explorerSessions';
 import { registerChatParticipant } from './ui/chatParticipant';
 
 export function activate(context: vscode.ExtensionContext): void {
-    // 未信任工作区（受限模式）时主动弹出信任管理，让用户一键信任（自己用场景省去手动查找）
+    // 未信任工作区（受限模式）时主动提示并引导打开信任管理（onStartupFinished 保证受限模式也激活）
     if (!vscode.workspace.isTrusted) {
-        void vscode.commands.executeCommand('workspace.trust');
+        void vscode.window
+            .showWarningMessage('当前工作区处于受限模式（未信任），请信任后以使用完整功能。', '打开信任管理')
+            .then((choice) => {
+                if (choice === '打开信任管理') {
+                    void vscode.commands.executeCommand('workbench.trust.manage');
+                }
+            });
     }
 
     const tags = new FileTagsStore(path.join(context.globalStorageUri.fsPath, 'tags.json'));
