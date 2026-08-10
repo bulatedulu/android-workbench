@@ -22,6 +22,12 @@ describe('buildAssistantViewHtml', () => {
         expect(html).toContain('id="send"');
     });
 
+    it('聊天区默认 hidden，且 CSS 强制 [hidden] 生效（不被 .section 的 display:flex 覆盖）', () => {
+        const html = buildAssistantViewHtml(state());
+        expect(html).toContain('<div id="chat-section" class="section" hidden>');
+        expect(html).toMatch(/\[hidden\]\s*\{\s*display:\s*none\s*!important/);
+    });
+
     it('未选父目录时包含选择按钮（初始渲染引导区）', () => {
         const html = buildAssistantViewHtml(state());
         expect(html).toContain('id="pick"');

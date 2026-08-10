@@ -61,6 +61,8 @@ export function buildAssistantViewHtml(state: AssistantWizardState): string {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   body { margin: 0; font-family: var(--vscode-font-family); height: 100vh; display: flex; flex-direction: column; }
+  /* 确保 hidden 属性生效（.section 的 display:flex 会覆盖 UA 的 display:none） */
+  [hidden] { display: none !important; }
   .section { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 10px 12px; }
   h2 { margin: 0 0 10px; font-size: 13px; }
   .hint { color: var(--vscode-descriptionForeground); font-size: 12px; }
