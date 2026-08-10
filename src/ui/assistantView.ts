@@ -51,6 +51,8 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
         webviewView.webview.options = { enableScripts: true };
         // 初始渲染引导（配置回填）；有工作区文件时 ready 后切聊天
         this.renderWizard();
+        // 辅助侧边栏展开时自动最大化，占满整个窗口（工作台效果）
+        this.maybeMaximize();
 
         webviewView.webview.onDidReceiveMessage((raw) => {
             void this.handleMessage(raw as AssistantViewMessage);
@@ -58,8 +60,14 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
         webviewView.onDidChangeVisibility(() => {
             if (webviewView.visible) {
                 this.showInitialPhase();
+                this.maybeMaximize();
             }
         });
+    }
+
+    /** 最大化辅助侧边栏，让助手视图占满整个窗口；用户可在右上角还原。 */
+    private maybeMaximize(): void {
+        void vscode.commands.executeCommand('workbench.action.maximizeAuxiliaryBar');
     }
 
     private post(message: AssistantHostMessage): void {
