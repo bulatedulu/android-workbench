@@ -8,6 +8,7 @@ import { WorkspaceProjectSource } from './ui/workspaceProjects';
 import { showSessionViewer } from './ui/sessionViewer';
 import { openWorkspaceWizard } from './ui/workspaceWizard';
 import { registerAssistantView } from './ui/assistantView';
+import { openAssistantFullscreen } from './ui/assistantPanel';
 import { registerExplorerSessionList } from './ui/explorerSessions';
 import { registerChatParticipant } from './ui/chatParticipant';
 
@@ -35,7 +36,10 @@ export function activate(context: vscode.ExtensionContext): void {
             openWorkspaceWizard(context);
         }),
         vscode.commands.registerCommand('aiWorkbench.openAssistant', () => {
-            void vscode.commands.executeCommand('aiWorkbench.assistant.focus');
+            openAssistantFullscreen(context);
+        }),
+        vscode.commands.registerCommand('aiWorkbench.openAssistantFullscreen', () => {
+            openAssistantFullscreen(context);
         })
     );
 }

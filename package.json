@@ -22,7 +22,7 @@
     },
     "contributes": {
         "viewsContainers": {
-            "secondarySidebar": [
+            "activitybar": [
                 {
                     "id": "aiWorkbench",
                     "title": "AI 工作台",
@@ -51,11 +51,23 @@
                 "icon": "$(sparkle)"
             },
             {
+                "command": "aiWorkbench.openAssistantFullscreen",
+                "title": "AI 工作台：打开工作台",
+                "icon": "$(screen-full)"
+            },
+            {
                 "command": "aiWorkbench.explorerSessionList",
                 "title": "AI 工作台：查看会话列表"
             }
         ],
         "menus": {
+            "view/title": [
+                {
+                    "command": "aiWorkbench.openAssistantFullscreen",
+                    "when": "view == aiWorkbench.assistant",
+                    "group": "navigation"
+                }
+            ],
             "explorer/context": [
                 {
                     "command": "aiWorkbench.explorerSessionList",
