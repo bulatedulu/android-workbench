@@ -8,6 +8,7 @@ import { WorkspaceProjectSource } from './ui/workspaceProjects';
 import { showSessionViewer } from './ui/sessionViewer';
 import { openWorkspaceWizard } from './ui/workspaceWizard';
 import { registerAssistantView } from './ui/assistantView';
+import { openWizardDialog } from './ui/wizardDialog';
 import { registerExplorerSessionList } from './ui/explorerSessions';
 import { registerChatParticipant } from './ui/chatParticipant';
 
@@ -36,6 +37,9 @@ export function activate(context: vscode.ExtensionContext): void {
         }),
         vscode.commands.registerCommand('aiWorkbench.openAssistant', () => {
             void vscode.commands.executeCommand('aiWorkbench.assistant.focus');
+        }),
+        vscode.commands.registerCommand('aiWorkbench.openWizardWindow', () => {
+            openWizardDialog(context);
         })
     );
 }

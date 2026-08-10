@@ -7,12 +7,10 @@ import {
     AssistantViewMessage,
     AssistantWizardState
 } from './assistantViewHtml';
-import { AssistantConfig, readAssistantConfig, writeAssistantConfig } from './assistantConfig';
+import { AssistantConfig, readAssistantConfig } from './assistantConfig';
 import {
-    buildWorkspaceFileContent,
     defaultWorkspaceFileName,
-    listSubdirectories,
-    resolveWorkspaceFile
+    listSubdirectories
 } from '../domain/workspaceSetup';
 import {
     bugDirectoryName,
@@ -22,6 +20,7 @@ import {
     resolveProjectRoot
 } from '../domain/issueSpace';
 import { NEW_ISSUE_COMMAND } from './messages';
+import { confirmWorkspace } from './workspaceActions';
 
 interface PendingChat {
     role: 'assistant' | 'system';
@@ -176,8 +175,7 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
                     break;
                 }
                 // 同名直接覆盖写入 .code-workspace，然后打开有名字的工作区（重载窗口）
-                const file = resolveWorkspaceFile(this.parent, message.name);
-                this.confirmAndOpen(file, folders);
+                confirmWorkspace(this.context, this.parent, folders, message.name);
                 break;
             }
             case 'send': {
@@ -193,17 +191,6 @@ class AssistantViewProvider implements vscode.WebviewViewProvider {
                 break;
             }
         }
-    }
-
-    /** 写 .code-workspace + 保存配置 + 打开有名字的工作区（重载窗口）。 */
-    private confirmAndOpen(file: string, folders: string[]): void {
-        fs.mkdirSync(path.dirname(file), { recursive: true });
-        fs.writeFileSync(file, buildWorkspaceFileContent(folders), 'utf8');
-        const config: AssistantConfig = { parent: this.parent, folders, name: path.basename(file) };
-        void writeAssistantConfig(this.context.globalState, config);
-        void vscode.window.showInformationMessage('初始化已完成。');
-        // 打开有名字的工作区；重载后 workspaceFile 存在，侧边栏直接进聊天
-        void vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(file));
     }
 
     private postChat(role: 'assistant' | 'system', text: string): void {
