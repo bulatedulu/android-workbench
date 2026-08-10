@@ -22,7 +22,7 @@
     },
     "contributes": {
         "viewsContainers": {
-            "auxiliarybar": [
+            "secondarySidebar": [
                 {
                     "id": "aiWorkbench",
                     "title": "AI 工作台",
