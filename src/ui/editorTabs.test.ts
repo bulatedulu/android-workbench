@@ -6,7 +6,8 @@ vi.mock('vscode', () => ({
     commands: { executeCommand: vi.fn() }
 }));
 
-const HIDE_TABS_COMMAND = 'workbench.action.toggleTabsVisibility';
+const HIDE_TABS_COMMAND = 'workbench.action.hideEditorTabs';
+const SHOW_TABS_COMMAND = 'workbench.action.showMultipleEditorTabs';
 
 function makePanel(): {
     panel: { onDidDispose: (fn: () => void) => { dispose: () => void } };
@@ -36,7 +37,7 @@ describe('hideEditorTabsWhileOpen', () => {
         expect(calls).toEqual([HIDE_TABS_COMMAND]);
 
         fireDispose();
-        expect(calls).toEqual([HIDE_TABS_COMMAND, HIDE_TABS_COMMAND]);
+        expect(calls).toEqual([HIDE_TABS_COMMAND, SHOW_TABS_COMMAND]);
     });
 
     it('dispose 监听注册进 subscriptions', () => {
