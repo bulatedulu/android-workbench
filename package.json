@@ -21,24 +21,6 @@
         }
     },
     "contributes": {
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "aiWorkbench",
-                    "title": "AI 工作台",
-                    "icon": "media/icon.svg"
-                }
-            ]
-        },
-        "views": {
-            "aiWorkbench": [
-                {
-                    "id": "aiWorkbench.assistant",
-                    "name": "助手",
-                    "type": "webview"
-                }
-            ]
-        },
         "commands": [
             {
                 "command": "aiWorkbench.createWorkspace",
@@ -56,15 +38,19 @@
                 "icon": "$(screen-full)"
             },
             {
+                "command": "aiWorkbench.toggleFullscreen",
+                "title": "AI 工作台：切换全屏工作台",
+                "icon": "$(screen-full)"
+            },
+            {
                 "command": "aiWorkbench.explorerSessionList",
                 "title": "AI 工作台：查看会话列表"
             }
         ],
         "menus": {
-            "view/title": [
+            "titleBar": [
                 {
-                    "command": "aiWorkbench.openAssistantFullscreen",
-                    "when": "view == aiWorkbench.assistant",
+                    "command": "aiWorkbench.toggleFullscreen",
                     "group": "navigation"
                 }
             ],

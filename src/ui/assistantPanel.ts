@@ -57,3 +57,12 @@ export function closeAssistantFullscreen(): void {
 export function isAssistantFullscreenOpen(): boolean {
     return currentPanel !== undefined;
 }
+
+/** 切换全屏「工作台」面板：已开则关，未开则开。 */
+export function toggleAssistantFullscreen(context: vscode.ExtensionContext): void {
+    if (isAssistantFullscreenOpen()) {
+        closeAssistantFullscreen();
+    } else {
+        openAssistantFullscreen(context);
+    }
+}

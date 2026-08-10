@@ -7,8 +7,7 @@ import { FileTagsStore } from './storage/tagsStore';
 import { WorkspaceProjectSource } from './ui/workspaceProjects';
 import { showSessionViewer } from './ui/sessionViewer';
 import { openWorkspaceWizard } from './ui/workspaceWizard';
-import { registerAssistantView } from './ui/assistantView';
-import { openAssistantFullscreen } from './ui/assistantPanel';
+import { openAssistantFullscreen, toggleAssistantFullscreen } from './ui/assistantPanel';
 import { registerExplorerSessionList } from './ui/explorerSessions';
 import { registerChatParticipant } from './ui/chatParticipant';
 
@@ -23,8 +22,6 @@ export function activate(context: vscode.ExtensionContext): void {
     const provider = new PiProvider();
     const service = new WorkbenchService(projects, provider);
 
-    // 侧边栏助手（引导 → 聊天两步式，替换原项目树）
-    registerAssistantView(context);
     registerExplorerSessionList(context, service, provider);
     registerChatParticipant(context, service, provider);
 
@@ -40,6 +37,10 @@ export function activate(context: vscode.ExtensionContext): void {
         }),
         vscode.commands.registerCommand('aiWorkbench.openAssistantFullscreen', () => {
             openAssistantFullscreen(context);
+        }),
+        // 顶部标题栏图标按钮：点一下开全屏、再点一下关
+        vscode.commands.registerCommand('aiWorkbench.toggleFullscreen', () => {
+            toggleAssistantFullscreen(context);
         })
     );
 }
