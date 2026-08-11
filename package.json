@@ -34,7 +34,8 @@
             "aiWorkbenchPi": [
                 {
                     "id": "aiWorkbench.piPanel",
-                    "name": "Pi"
+                    "name": "Pi",
+                    "type": "webview"
                 }
             ]
         },
