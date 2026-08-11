@@ -10,6 +10,7 @@ import { openWorkspaceWizard } from './ui/workspaceWizard';
 import { openAssistantFullscreen, toggleAssistantFullscreen } from './ui/assistantPanel';
 import { registerExplorerSessionList } from './ui/explorerSessions';
 import { registerChatParticipant } from './ui/chatParticipant';
+import { registerPiPanel, openPiPanel } from './ui/piPanel';
 
 export function activate(context: vscode.ExtensionContext): void {
     // 未信任工作区（受限模式）时自动打开官方信任管理窗口（onStartupFinished 保证受限模式也激活）
@@ -24,6 +25,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     registerExplorerSessionList(context, service, provider);
     registerChatParticipant(context, service, provider);
+    registerPiPanel(context);
 
     context.subscriptions.push(
         vscode.commands.registerCommand('aiWorkbench.openSession', (session: Session) => {
@@ -41,6 +43,10 @@ export function activate(context: vscode.ExtensionContext): void {
         // 顶部标题栏图标按钮：点一下开全屏、再点一下关
         vscode.commands.registerCommand('aiWorkbench.toggleFullscreen', () => {
             toggleAssistantFullscreen(context);
+        }),
+        // 资源管理器右键「会话列表」→ 打开/聚焦右侧 Pi 面板
+        vscode.commands.registerCommand('aiWorkbench.openPiPanel', () => {
+            openPiPanel();
         })
     );
 }

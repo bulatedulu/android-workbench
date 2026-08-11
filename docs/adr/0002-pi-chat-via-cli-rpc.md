@@ -1,0 +1,3 @@
+# 0002: Agent 会话对话经 Agent CLI 的 RPC 模式驱动
+
+Pi 辅助侧边栏面板要让工作台**代表用户**创建/续写 pi 会话并流式对话。写路径走 pi 自己的 CLI：spawn `pi --mode rpc --session <file>`，stdin 发 JSON prompt，stdout 收流式事件（`message_update`/`text_delta`）——由 pi 自己写会话文件，工作台**不直接编辑 store 文件**，这延续了 ADR-0001 的边界（写走 Agent 的 CLI/SDK，工作台绝不直接改文件）。这是对 ADR-0001 的**扩展**：从"只读扫描 + 终端 resume"扩展到"工作台主动发起对话"。有历史会话时用 `--session` 续写该目录最新会话文件；无历史时用固定 session-id（由目录路径派生）创建，落在 pi 默认存储 `~/.pi/agent/sessions/--<目录>--/`，与现有扫描（PiProvider 原地只读）完全兼容。选择 RPC 而非 `--print` 一次性，是为了流式渲染与取消；选择走 CLI 而非嵌入 pi SDK（`@mariozechner/pi-coding-agent`），是为了不引入重依赖并保持与现有 `PiProvider` 同一套 CLI 语义。
