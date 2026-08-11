@@ -47,6 +47,7 @@ export function buildPiChatHtml(): string {
 <script>
   const vscode = acquireVsCodeApi();
   const renderSession = (data) => {
+    streaming = false;
     document.getElementById('chat-title').textContent = data.title || '';
     const list = document.getElementById('chat-messages');
     list.textContent = '';
@@ -66,13 +67,13 @@ export function buildPiChatHtml(): string {
     document.getElementById('welcome').hidden = true;
     document.getElementById('chat').hidden = false;
   };
-  // 流式状态：assistant 增量追加到同一条消息，直到 chatEnd 或 system 消息打断
+  // 流式状态：assistant 增量追加到同一条消息，直到 chatEnd 或 user/system 消息打断
   let streaming = false;
   const appendChat = (role, text) => {
-    if (role === 'system') streaming = false;
+    if (role === 'system' || role === 'user') streaming = false;
     const list = document.getElementById('chat-messages');
     const last = list.lastElementChild;
-    if (role === 'assistant' && streaming && last && last.classList.contains('msg assistant')) {
+    if (role === 'assistant' && streaming && last && last.classList.contains('assistant')) {
       const body = last.querySelector('.body');
       if (body) { body.textContent += text; return; }
     }

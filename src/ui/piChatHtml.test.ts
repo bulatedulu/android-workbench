@@ -57,4 +57,11 @@ describe('buildPiChatHtml', () => {
         expect(html).toContain("msg.type === 'chat'");
         expect(html).toContain("msg.type === 'chatEnd'");
     });
+
+    it('流式合并判断用单个类名（classList.contains 不支持空格多类名），user/system 重置流式', () => {
+        const html = buildPiChatHtml();
+        expect(html).toContain("classList.contains('assistant')");
+        expect(html).not.toContain("classList.contains('msg assistant')");
+        expect(html).toContain("role === 'system' || role === 'user'");
+    });
 });
