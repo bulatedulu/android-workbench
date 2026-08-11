@@ -24,4 +24,17 @@ describe('buildPiChatHtml', () => {
         expect(html).toContain('acquireVsCodeApi()');
         expect(html).toContain("vscode.postMessage({ type: 'ready' })");
     });
+
+    it('包含隐藏的聊天区，可接收 session 消息渲染会话历史', () => {
+        const html = buildPiChatHtml();
+        expect(html).toContain('id="chat"');
+        expect(html).toContain("msg.type === 'session'");
+        expect(html).toContain('renderSession');
+    });
+
+    it('会话历史消息渲染使用 textContent（防注入）', () => {
+        const html = buildPiChatHtml();
+        expect(html).toContain('body.textContent');
+        expect(html).toContain('meta.textContent');
+    });
 });
