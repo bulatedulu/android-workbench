@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as vscode from 'vscode';
-import { registerPiPanel, openPiPanel, pickAndOpenSession } from './piPanel';
+import { registerPiPanel, openPiPanel, openNewSession, openLatestSession, pickAndOpenSession } from './piPanel';
 import { WorkbenchService } from '../domain/workbench';
 import { AgentProvider } from '../agent/provider';
 import { PiRpcClient } from '../agent/piRpcClient';
@@ -22,7 +22,7 @@ vi.mock('vscode', () => ({
     commands: { executeCommand: mocks.executeCommand }
 }));
 
-function makeSession(): Session {
+function makeSession(overrides: Partial<Session> = {}): Session {
     return {
         id: 's1',
         agent: 'pi',
@@ -31,7 +31,8 @@ function makeSession(): Session {
         title: '修复登录',
         model: 'gpt-4.1',
         createdAt: 1000,
-        updatedAt: 2000
+        updatedAt: 2000,
+        ...overrides
     };
 }
 
@@ -130,6 +131,66 @@ describe('openPiPanel', () => {
     it('执行视图 focus 命令', async () => {
         await openPiPanel();
         expect(mocks.executeCommand).toHaveBeenCalledWith('aiWorkbench.piPanel.focus');
+    });
+});
+
+describe('openNewSession', () => {
+    beforeEach(() => {
+        mocks.executeCommand.mockClear();
+        mocks.registerWebviewViewProvider.mockClear();
+    });
+
+    it('聚焦面板并显示该目录的空会话', async () => {
+        const { provider } = makeProvider();
+        const { rpc } = makeRpc();
+        registerPiPanel(makeContext(), provider, rpc);
+        const { view } = captureView();
+
+        await openNewSession('C:/bug1');
+
+        expect(mocks.executeCommand).toHaveBeenCalledWith('aiWorkbench.piPanel.focus');
+        expect(view.webview.postMessage).toHaveBeenCalledWith(
+            expect.objectContaining({ type: 'session', messages: [] })
+        );
+    });
+});
+
+describe('openLatestSession', () => {
+    beforeEach(() => {
+        mocks.executeCommand.mockClear();
+        mocks.registerWebviewViewProvider.mockClear();
+    });
+
+    it('有历史会话时 resume 最新一个', async () => {
+        const { provider } = makeProvider();
+        const { rpc } = makeRpc();
+        registerPiPanel(makeContext(), provider, rpc);
+        const { view } = captureView();
+        const sessions = [
+            makeSession({ title: '旧', updatedAt: 100 }),
+            makeSession({ title: '新', updatedAt: 300 })
+        ];
+        const service = { listSessionsUnderFolder: vi.fn(() => sessions) } as unknown as WorkbenchService;
+
+        await openLatestSession('C:/bug1', service);
+
+        expect(view.webview.postMessage).toHaveBeenCalledWith(
+            expect.objectContaining({ type: 'session', title: '新' })
+        );
+    });
+
+    it('无历史会话时开启新会话', async () => {
+        const { provider } = makeProvider();
+        const { rpc } = makeRpc();
+        registerPiPanel(makeContext(), provider, rpc);
+        const { view } = captureView();
+        const service = { listSessionsUnderFolder: vi.fn(() => []) } as unknown as WorkbenchService;
+
+        await openLatestSession('C:/bug1', service);
+
+        expect(view.webview.postMessage).toHaveBeenCalledWith(
+            expect.objectContaining({ type: 'session', messages: [] })
+        );
     });
 });
 

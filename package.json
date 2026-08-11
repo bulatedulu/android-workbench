@@ -38,6 +38,12 @@
                 }
             ]
         },
+        "submenus": [
+            {
+                "id": "aiWorkbench.sessionList",
+                "label": "会话列表"
+            }
+        ],
         "commands": [
             {
                 "command": "aiWorkbench.createWorkspace",
@@ -64,8 +70,18 @@
                 "title": "AI 工作台：查看会话列表"
             },
             {
-                "command": "aiWorkbench.openPiPanel",
-                "title": "AI 工作台：会话列表",
+                "command": "aiWorkbench.piNewSession",
+                "title": "开启新会话",
+                "icon": "$(sparkle)"
+            },
+            {
+                "command": "aiWorkbench.piResumeLatest",
+                "title": "继续最近会话",
+                "icon": "$(history)"
+            },
+            {
+                "command": "aiWorkbench.piPickSession",
+                "title": "查看会话列表",
                 "icon": "$(comment-discussion)"
             }
         ],
@@ -78,9 +94,23 @@
             ],
             "explorer/context": [
                 {
-                    "command": "aiWorkbench.openPiPanel",
+                    "submenu": "aiWorkbench.sessionList",
                     "when": "explorerResourceIsFolder",
                     "group": "aiWorkbench@1"
+                }
+            ],
+            "aiWorkbench.sessionList": [
+                {
+                    "command": "aiWorkbench.piNewSession",
+                    "group": "1_new"
+                },
+                {
+                    "command": "aiWorkbench.piResumeLatest",
+                    "group": "2_resume"
+                },
+                {
+                    "command": "aiWorkbench.piPickSession",
+                    "group": "3_list"
                 }
             ]
         }

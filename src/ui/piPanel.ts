@@ -55,8 +55,26 @@ export async function openPiPanel(): Promise<void> {
     await vscode.commands.executeCommand(`${PI_PANEL_VIEW_ID}.focus`);
 }
 
+/** 右键「开启新会话」：聚焦面板并显示该目录的空会话。 */
+export async function openNewSession(folderPath: string): Promise<void> {
+    await openPiPanel();
+    controller?.showNewSession(folderPath);
+}
+
+/** 右键「继续最近会话」：聚焦面板，resume 该目录最新历史会话；无历史则开新会话。 */
+export async function openLatestSession(folderPath: string, service: WorkbenchService): Promise<void> {
+    await openPiPanel();
+    const sessions = service.listSessionsUnderFolder(folderPath);
+    const latest = [...sessions].sort((a, b) => b.updatedAt - a.updatedAt)[0];
+    if (latest) {
+        controller?.showSession(latest);
+    } else {
+        controller?.showNewSession(folderPath);
+    }
+}
+
 /**
- * 右键入口：聚焦 Pi 面板 → 弹 QuickPick（开启新会话 + 该目录历史会话）→
+ * 右键「查看会话列表」：聚焦 Pi 面板 → 弹 QuickPick（开启新会话 + 该目录历史会话）→
  * 选中历史会话加载到面板；选「开启新会话」显示空会话（对话在后续 ticket）。
  */
 export async function pickAndOpenSession(folderPath: string, service: WorkbenchService): Promise<void> {
