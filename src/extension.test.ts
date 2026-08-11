@@ -17,6 +17,7 @@ vi.mock('vscode', () => ({
 
 vi.mock('./domain/workbench', () => ({ WorkbenchService: vi.fn() }));
 vi.mock('./agent/piProvider', () => ({ PiProvider: vi.fn() }));
+vi.mock('./agent/piRpcClient', () => ({ PiRpcClient: vi.fn() }));
 vi.mock('./storage/tagsStore', () => ({ FileTagsStore: vi.fn() }));
 vi.mock('./ui/workspaceProjects', () => ({ WorkspaceProjectSource: vi.fn() }));
 vi.mock('./ui/sessionViewer', () => ({ showSessionViewer: vi.fn() }));
@@ -44,7 +45,11 @@ describe('activate', () => {
 
     it('注册 Pi 面板视图提供者', () => {
         activate(makeContext());
-        expect(mocks.registerPiPanel).toHaveBeenCalledWith(expect.any(Object), expect.any(Object));
+        expect(mocks.registerPiPanel).toHaveBeenCalledWith(
+            expect.any(Object),
+            expect.any(Object),
+            expect.any(Object)
+        );
     });
 
     it('注册 Pi 面板打开命令与既有工作台命令', () => {

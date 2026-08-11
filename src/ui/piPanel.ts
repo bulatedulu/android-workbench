@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { AgentProvider } from '../agent/provider';
+import { PiRpcClient } from '../agent/piRpcClient';
 import { WorkbenchService } from '../domain/workbench';
 import { Session } from '../domain/session';
 import { buildPiChatHtml } from './piChatHtml';
@@ -19,7 +20,7 @@ let controller: PiChatController | undefined;
 let currentView: vscode.WebviewView | undefined;
 
 /** 注册 Pi 辅助侧边栏面板（WebviewView）。薄壳：注册视图 + 创建控制器渲染欢迎 HTML。 */
-export function registerPiPanel(context: vscode.ExtensionContext, provider: AgentProvider): void {
+export function registerPiPanel(context: vscode.ExtensionContext, provider: AgentProvider, rpc: PiRpcClient): void {
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(
             PI_PANEL_VIEW_ID,
@@ -30,8 +31,12 @@ export function registerPiPanel(context: vscode.ExtensionContext, provider: Agen
                     const host: PiChatHost = {
                         post: (message) => void webviewView.webview.postMessage(message)
                     };
-                    controller = new PiChatController(host, provider);
+                    const instance = new PiChatController(host, provider, rpc);
+                    controller = instance;
                     currentView = webviewView;
+                    webviewView.webview.onDidReceiveMessage((raw) => {
+                        instance.handleMessage(raw);
+                    });
                     webviewView.onDidDispose(() => {
                         if (currentView === webviewView) {
                             currentView = undefined;

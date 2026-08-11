@@ -22,6 +22,9 @@ export function buildPiChatHtml(): string {
   .msg .body { white-space: pre-wrap; word-break: break-word; font-size: 12px; }
   .msg.user { background: var(--vscode-textBlockQuote-background, rgba(127,127,127,0.15)); border-radius: 4px; padding: 4px 8px; }
   .msg.assistant .body { padding: 2px 0; }
+  .msg.system { color: var(--vscode-descriptionForeground); font-size: 11px; }
+  #input-row { display: flex; gap: 6px; padding: 8px 12px; border-top: 1px solid var(--vscode-panel-border); }
+  #input { flex: 1; padding: 5px 6px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border, transparent); }
 </style>
 </head>
 <body>
@@ -34,6 +37,11 @@ export function buildPiChatHtml(): string {
   <div id="chat" hidden>
     <div id="chat-title"></div>
     <div id="chat-messages"></div>
+    <div id="input-row">
+      <input id="input" placeholder="输入消息，Enter 发送…">
+      <button id="send">发送</button>
+      <button id="abort" title="停止生成">停止</button>
+    </div>
   </div>
 </div>
 <script>
@@ -58,10 +66,52 @@ export function buildPiChatHtml(): string {
     document.getElementById('welcome').hidden = true;
     document.getElementById('chat').hidden = false;
   };
+  // 流式状态：assistant 增量追加到同一条消息，直到 chatEnd 或 system 消息打断
+  let streaming = false;
+  const appendChat = (role, text) => {
+    if (role === 'system') streaming = false;
+    const list = document.getElementById('chat-messages');
+    const last = list.lastElementChild;
+    if (role === 'assistant' && streaming && last && last.classList.contains('msg assistant')) {
+      const body = last.querySelector('.body');
+      if (body) { body.textContent += text; return; }
+    }
+    const group = document.createElement('div');
+    group.className = 'msg ' + role;
+    if (role !== 'assistant') {
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.textContent = role === 'user' ? '我' : role;
+      group.appendChild(meta);
+    }
+    const body = document.createElement('div');
+    body.className = 'body';
+    body.textContent = text;
+    group.appendChild(body);
+    list.appendChild(group);
+    if (role === 'assistant') streaming = true;
+    list.scrollTop = list.scrollHeight;
+  };
+  const sendChat = () => {
+    const input = document.getElementById('input');
+    const text = input.value.trim();
+    if (!text) return;
+    appendChat('user', text);
+    vscode.postMessage({ type: 'send', text });
+    input.value = '';
+  };
+  document.getElementById('send').addEventListener('click', sendChat);
+  document.getElementById('abort').addEventListener('click', () => vscode.postMessage({ type: 'abort' }));
+  document.getElementById('input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); sendChat(); }
+    else if (e.key === 'Escape') { vscode.postMessage({ type: 'abort' }); }
+  });
   window.addEventListener('message', (e) => {
     const msg = e.data;
     if (!msg) return;
     if (msg.type === 'session') renderSession(msg);
+    else if (msg.type === 'chat') appendChat(msg.role, msg.text || '');
+    else if (msg.type === 'chatEnd') streaming = false;
   });
   vscode.postMessage({ type: 'ready' });
 </script>

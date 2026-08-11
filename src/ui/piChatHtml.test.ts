@@ -37,4 +37,24 @@ describe('buildPiChatHtml', () => {
         expect(html).toContain('body.textContent');
         expect(html).toContain('meta.textContent');
     });
+
+    it('聊天区含输入框与发送/取消按钮', () => {
+        const html = buildPiChatHtml();
+        expect(html).toContain('id="input"');
+        expect(html).toContain('id="send"');
+        expect(html).toContain('id="abort"');
+    });
+
+    it('脚本支持发送消息与取消（postMessage send/abort，含 Esc）', () => {
+        const html = buildPiChatHtml();
+        expect(html).toContain("vscode.postMessage({ type: 'send'");
+        expect(html).toContain("vscode.postMessage({ type: 'abort' })");
+        expect(html).toContain("e.key === 'Escape'");
+    });
+
+    it('脚本监听 chat 消息流式追加与 chatEnd 结束标记', () => {
+        const html = buildPiChatHtml();
+        expect(html).toContain("msg.type === 'chat'");
+        expect(html).toContain("msg.type === 'chatEnd'");
+    });
 });

@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { registerPiPanel, openPiPanel, pickAndOpenSession } from './piPanel';
 import { WorkbenchService } from '../domain/workbench';
 import { AgentProvider } from '../agent/provider';
+import { PiRpcClient } from '../agent/piRpcClient';
 import { Session } from '../domain/session';
 
 const mocks = vi.hoisted(() => ({
@@ -43,12 +44,18 @@ function makeProvider(): { provider: AgentProvider; readSessionContent: ReturnTy
     return { provider: { readSessionContent } as unknown as AgentProvider, readSessionContent };
 }
 
+function makeRpc(): { rpc: PiRpcClient; prompt: ReturnType<typeof vi.fn> } {
+    const prompt = vi.fn();
+    return { rpc: { prompt } as unknown as PiRpcClient, prompt };
+}
+
 function captureView(): {
     view: {
         webview: {
             options: Record<string, unknown>;
             html: string;
             postMessage: ReturnType<typeof vi.fn>;
+            onDidReceiveMessage: ReturnType<typeof vi.fn>;
         };
         onDidDispose: (fn: () => void) => void;
     };
@@ -56,13 +63,25 @@ function captureView(): {
     const provider = mocks.registerWebviewViewProvider.mock.calls[0][1] as {
         resolveWebviewView(v: unknown): void;
     };
-    const postMessage = vi.fn();
-    const view = {
-        webview: { options: {}, html: '', postMessage },
-        onDidDispose: () => { }
+    const webview = {
+        options: {} as Record<string, unknown>,
+        html: '',
+        postMessage: vi.fn(),
+        onDidReceiveMessage: vi.fn()
     };
+    const view = { webview, onDidDispose: () => { } };
     provider.resolveWebviewView(view);
-    return { view: view as unknown as { webview: { options: Record<string, unknown>; html: string; postMessage: ReturnType<typeof vi.fn> }; onDidDispose: (fn: () => void) => void } };
+    return {
+        view: view as unknown as {
+            webview: {
+                options: Record<string, unknown>;
+                html: string;
+                postMessage: ReturnType<typeof vi.fn>;
+                onDidReceiveMessage: ReturnType<typeof vi.fn>;
+            };
+            onDidDispose: (fn: () => void) => void;
+        }
+    };
 }
 
 describe('registerPiPanel', () => {
@@ -74,7 +93,8 @@ describe('registerPiPanel', () => {
 
     it('以 Pi 视图 id 注册 WebviewViewProvider，resolve 时渲染欢迎 HTML 并启用脚本', () => {
         const { provider } = makeProvider();
-        registerPiPanel(makeContext(), provider);
+        const { rpc } = makeRpc();
+        registerPiPanel(makeContext(), provider, rpc);
         expect(mocks.registerWebviewViewProvider).toHaveBeenCalledWith(
             'aiWorkbench.piPanel',
             expect.any(Object),
@@ -84,6 +104,21 @@ describe('registerPiPanel', () => {
         expect(view.webview.options).toEqual({ enableScripts: true });
         expect(view.webview.html).toContain('Pi 面板');
         expect(view.webview.html).toContain('会话列表');
+    });
+
+    it('resolve 后注册消息监听，webview 消息转发给控制器（无会话时发提示）', () => {
+        const { provider } = makeProvider();
+        const { rpc, prompt } = makeRpc();
+        registerPiPanel(makeContext(), provider, rpc);
+        const { view } = captureView();
+
+        const handler = view.webview.onDidReceiveMessage.mock.calls[0][0] as (raw: unknown) => void;
+        handler({ type: 'send', text: '你好' });
+
+        expect(prompt).not.toHaveBeenCalled(); // 无会话上下文
+        expect(view.webview.postMessage).toHaveBeenCalledWith(
+            expect.objectContaining({ type: 'chat', role: 'system' })
+        );
     });
 });
 
@@ -107,7 +142,8 @@ describe('pickAndOpenSession', () => {
 
     it('聚焦面板 → 列出目录会话 → 选中历史会话后加载到面板', async () => {
         const { provider } = makeProvider();
-        registerPiPanel(makeContext(), provider);
+        const { rpc } = makeRpc();
+        registerPiPanel(makeContext(), provider, rpc);
         const { view } = captureView();
 
         const sessions = [makeSession()];
@@ -129,7 +165,8 @@ describe('pickAndOpenSession', () => {
 
     it('QuickPick 标题显示目录名，避免选错目录', async () => {
         const { provider } = makeProvider();
-        registerPiPanel(makeContext(), provider);
+        const { rpc } = makeRpc();
+        registerPiPanel(makeContext(), provider, rpc);
         captureView();
         const service = { listSessionsUnderFolder: vi.fn(() => []) } as unknown as WorkbenchService;
         mocks.showQuickPick.mockResolvedValue(undefined);
@@ -142,7 +179,8 @@ describe('pickAndOpenSession', () => {
 
     it('选中「开启新会话」→ 面板收到空会话消息', async () => {
         const { provider } = makeProvider();
-        registerPiPanel(makeContext(), provider);
+        const { rpc } = makeRpc();
+        registerPiPanel(makeContext(), provider, rpc);
         const { view } = captureView();
         const service = { listSessionsUnderFolder: vi.fn(() => []) } as unknown as WorkbenchService;
         mocks.showQuickPick.mockResolvedValue({ label: '开启新会话', action: 'new' });
@@ -156,7 +194,8 @@ describe('pickAndOpenSession', () => {
 
     it('取消选择时不加载会话', async () => {
         const { provider } = makeProvider();
-        registerPiPanel(makeContext(), provider);
+        const { rpc } = makeRpc();
+        registerPiPanel(makeContext(), provider, rpc);
         const { view } = captureView();
         const service = { listSessionsUnderFolder: vi.fn(() => [makeSession()]) } as unknown as WorkbenchService;
         mocks.showQuickPick.mockResolvedValue(undefined);
