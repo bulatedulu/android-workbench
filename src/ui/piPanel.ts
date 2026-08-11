@@ -2,19 +2,11 @@ import * as vscode from 'vscode';
 import { AgentProvider } from '../agent/provider';
 import { PiRpcClient } from '../agent/piRpcClient';
 import { WorkbenchService } from '../domain/workbench';
-import { Session } from '../domain/session';
 import { buildPiChatHtml } from './piChatHtml';
 import { PiChatController, PiChatHost } from './piChatController';
-import { buildSessionPickChoices } from './piSessionPicker';
 
 /** Pi 面板视图 id（辅助侧边栏 secondarySidebar 容器内，与 Copilot Chat 同级）。 */
 export const PI_PANEL_VIEW_ID = 'aiWorkbench.piPanel';
-
-/** QuickPick 项：携带选中动作（开启新会话 / 历史会话）。 */
-interface PiPickItem extends vscode.QuickPickItem {
-    action: 'new' | 'session';
-    session?: Session;
-}
 
 let controller: PiChatController | undefined;
 let currentView: vscode.WebviewView | undefined;
@@ -55,13 +47,7 @@ export async function openPiPanel(): Promise<void> {
     await vscode.commands.executeCommand(`${PI_PANEL_VIEW_ID}.focus`);
 }
 
-/** 右键「开启新会话」：聚焦面板并显示该目录的空会话。 */
-export async function openNewSession(folderPath: string): Promise<void> {
-    await openPiPanel();
-    controller?.showNewSession(folderPath);
-}
-
-/** 右键「继续最近会话」：聚焦面板，resume 该目录最新历史会话；无历史则开新会话。 */
+/** 右键「打开最近会话」：聚焦面板，resume 该目录最新历史会话；无历史则打开面板空会话。 */
 export async function openLatestSession(folderPath: string, service: WorkbenchService): Promise<void> {
     await openPiPanel();
     const sessions = service.listSessionsUnderFolder(folderPath);
@@ -70,36 +56,6 @@ export async function openLatestSession(folderPath: string, service: WorkbenchSe
         controller?.showSession(latest);
     } else {
         controller?.showNewSession(folderPath);
-    }
-}
-
-/**
- * 右键「查看会话列表」：聚焦 Pi 面板 → 弹 QuickPick（开启新会话 + 该目录历史会话）→
- * 选中历史会话加载到面板；选「开启新会话」显示空会话（对话在后续 ticket）。
- */
-export async function pickAndOpenSession(folderPath: string, service: WorkbenchService): Promise<void> {
-    await openPiPanel();
-    const sessions = service.listSessionsUnderFolder(folderPath);
-    const choices = buildSessionPickChoices(sessions);
-    const items: PiPickItem[] = choices.map((c) =>
-        c.action === 'new'
-            ? { label: c.label, action: 'new' as const }
-            : { label: c.label, description: c.description, action: 'session' as const, session: c.session }
-    );
-    const picked = await vscode.window.showQuickPick(items, {
-        title: `选择会话（${folderPath}）`,
-        placeHolder: '开启新会话，或选择历史会话'
-    });
-    if (!picked) {
-        return;
-    }
-    if (!controller) {
-        return; // 面板未就绪（防御）
-    }
-    if (picked.action === 'session' && picked.session) {
-        controller.showSession(picked.session);
-    } else if (picked.action === 'new') {
-        controller.showNewSession(folderPath);
     }
 }
 

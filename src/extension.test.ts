@@ -27,9 +27,7 @@ vi.mock('./ui/explorerSessions', () => ({ registerExplorerSessionList: mocks.reg
 vi.mock('./ui/chatParticipant', () => ({ registerChatParticipant: mocks.registerChatParticipant }));
 vi.mock('./ui/piPanel', () => ({
     registerPiPanel: mocks.registerPiPanel,
-    openNewSession: vi.fn(),
-    openLatestSession: vi.fn(),
-    pickAndOpenSession: vi.fn()
+    openLatestSession: vi.fn()
 }));
 
 import { activate } from './extension';
@@ -57,12 +55,10 @@ describe('activate', () => {
         );
     });
 
-    it('注册 Pi 面板三个右键子菜单命令', () => {
+    it('注册 Pi 面板「打开最近会话」命令与既有工作台命令', () => {
         activate(makeContext());
         const ids = mocks.registerCommand.mock.calls.map((c) => c[0]);
-        expect(ids).toContain('aiWorkbench.piNewSession');
         expect(ids).toContain('aiWorkbench.piResumeLatest');
-        expect(ids).toContain('aiWorkbench.piPickSession');
         expect(ids).toContain('aiWorkbench.toggleFullscreen');
         expect(ids).toContain('aiWorkbench.openAssistant');
         expect(ids).toContain('aiWorkbench.createWorkspace');

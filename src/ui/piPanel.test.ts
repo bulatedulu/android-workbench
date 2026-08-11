@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as vscode from 'vscode';
-import { registerPiPanel, openPiPanel, openNewSession, openLatestSession, pickAndOpenSession } from './piPanel';
+import { registerPiPanel, openPiPanel, openLatestSession } from './piPanel';
 import { WorkbenchService } from '../domain/workbench';
 import { AgentProvider } from '../agent/provider';
 import { PiRpcClient } from '../agent/piRpcClient';
@@ -10,14 +10,12 @@ const mocks = vi.hoisted(() => ({
     registerWebviewViewProvider: vi.fn(
         (_id: string, _provider: unknown, _options: unknown) => undefined
     ),
-    showQuickPick: vi.fn(),
     executeCommand: vi.fn((_cmd: string) => Promise.resolve())
 }));
 
 vi.mock('vscode', () => ({
     window: {
-        registerWebviewViewProvider: mocks.registerWebviewViewProvider,
-        showQuickPick: mocks.showQuickPick
+        registerWebviewViewProvider: mocks.registerWebviewViewProvider
     },
     commands: { executeCommand: mocks.executeCommand }
 }));
@@ -88,7 +86,6 @@ function captureView(): {
 describe('registerPiPanel', () => {
     beforeEach(() => {
         mocks.registerWebviewViewProvider.mockClear();
-        mocks.showQuickPick.mockClear();
         mocks.executeCommand.mockClear();
     });
 
@@ -134,27 +131,6 @@ describe('openPiPanel', () => {
     });
 });
 
-describe('openNewSession', () => {
-    beforeEach(() => {
-        mocks.executeCommand.mockClear();
-        mocks.registerWebviewViewProvider.mockClear();
-    });
-
-    it('聚焦面板并显示该目录的空会话', async () => {
-        const { provider } = makeProvider();
-        const { rpc } = makeRpc();
-        registerPiPanel(makeContext(), provider, rpc);
-        const { view } = captureView();
-
-        await openNewSession('C:/bug1');
-
-        expect(mocks.executeCommand).toHaveBeenCalledWith('aiWorkbench.piPanel.focus');
-        expect(view.webview.postMessage).toHaveBeenCalledWith(
-            expect.objectContaining({ type: 'session', messages: [] })
-        );
-    });
-});
-
 describe('openLatestSession', () => {
     beforeEach(() => {
         mocks.executeCommand.mockClear();
@@ -191,79 +167,6 @@ describe('openLatestSession', () => {
         expect(view.webview.postMessage).toHaveBeenCalledWith(
             expect.objectContaining({ type: 'session', messages: [] })
         );
-    });
-});
-
-describe('pickAndOpenSession', () => {
-    beforeEach(() => {
-        mocks.registerWebviewViewProvider.mockClear();
-        mocks.showQuickPick.mockClear();
-        mocks.executeCommand.mockClear();
-    });
-
-    it('聚焦面板 → 列出目录会话 → 选中历史会话后加载到面板', async () => {
-        const { provider } = makeProvider();
-        const { rpc } = makeRpc();
-        registerPiPanel(makeContext(), provider, rpc);
-        const { view } = captureView();
-
-        const sessions = [makeSession()];
-        const service = { listSessionsUnderFolder: vi.fn(() => sessions) } as unknown as WorkbenchService;
-        mocks.showQuickPick.mockResolvedValue({ label: '修复登录', action: 'session', session: sessions[0] });
-
-        await pickAndOpenSession('C:/bug1', service);
-
-        expect(mocks.executeCommand).toHaveBeenCalledWith('aiWorkbench.piPanel.focus');
-        expect(service.listSessionsUnderFolder).toHaveBeenCalledWith('C:/bug1');
-        const items = (mocks.showQuickPick.mock.calls[0] as unknown[])[0] as unknown[];
-        expect(items[0]).toMatchObject({ action: 'new', label: expect.stringContaining('开启新会话') });
-        expect(items[1]).toMatchObject({ action: 'session', label: '修复登录' });
-        // 选中历史会话 → 面板收到 session 消息
-        expect(view.webview.postMessage).toHaveBeenCalledWith(
-            expect.objectContaining({ type: 'session', title: '修复登录' })
-        );
-    });
-
-    it('QuickPick 标题显示目录名，避免选错目录', async () => {
-        const { provider } = makeProvider();
-        const { rpc } = makeRpc();
-        registerPiPanel(makeContext(), provider, rpc);
-        captureView();
-        const service = { listSessionsUnderFolder: vi.fn(() => []) } as unknown as WorkbenchService;
-        mocks.showQuickPick.mockResolvedValue(undefined);
-
-        await pickAndOpenSession('C:/bug1', service);
-
-        const options = (mocks.showQuickPick.mock.calls[0] as unknown[])[1] as { title: string };
-        expect(options.title).toContain('C:/bug1');
-    });
-
-    it('选中「开启新会话」→ 面板收到空会话消息', async () => {
-        const { provider } = makeProvider();
-        const { rpc } = makeRpc();
-        registerPiPanel(makeContext(), provider, rpc);
-        const { view } = captureView();
-        const service = { listSessionsUnderFolder: vi.fn(() => []) } as unknown as WorkbenchService;
-        mocks.showQuickPick.mockResolvedValue({ label: '开启新会话', action: 'new' });
-
-        await pickAndOpenSession('C:/bug1', service);
-
-        expect(view.webview.postMessage).toHaveBeenCalledWith(
-            expect.objectContaining({ type: 'session', messages: [] })
-        );
-    });
-
-    it('取消选择时不加载会话', async () => {
-        const { provider } = makeProvider();
-        const { rpc } = makeRpc();
-        registerPiPanel(makeContext(), provider, rpc);
-        const { view } = captureView();
-        const service = { listSessionsUnderFolder: vi.fn(() => [makeSession()]) } as unknown as WorkbenchService;
-        mocks.showQuickPick.mockResolvedValue(undefined);
-
-        await pickAndOpenSession('C:/bug1', service);
-
-        expect(view.webview.postMessage).not.toHaveBeenCalled();
     });
 });
 
