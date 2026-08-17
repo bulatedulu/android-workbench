@@ -53,7 +53,7 @@ export function registerChatParticipant(
                 default: {
                     stream.markdown(
                         [
-                            '我是 AI 工作台会话助手。可用指令：',
+                            '我是 Android 工作台会话助手。可用指令：',
                             '- 「列出会话」查看当前工作区所有项目的会话',
                             '- 「显示 <关键词>」查看某个会话内容',
                             '- 「继续 <关键词> <问题>」基于该会话继续提问（不写回 pi 存储）',

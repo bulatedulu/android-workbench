@@ -13,7 +13,7 @@ export function openAssistantFullscreen(context: vscode.ExtensionContext): void 
     }
     const panel = vscode.window.createWebviewPanel(
         'aiWorkbench.assistantFullscreen',
-        'AI 工作台助手',
+        'Android 工作台助手',
         vscode.ViewColumn.One,
         { enableScripts: true }
     );

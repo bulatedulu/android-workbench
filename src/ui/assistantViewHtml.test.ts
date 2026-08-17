@@ -33,7 +33,7 @@ describe('buildAssistantViewHtml', () => {
         expect(html).toContain('点击选择');
         expect(html).toContain('Tab 聚焦');
         expect(html).not.toContain('id="pick"');
-        expect(html).not.toContain('AI 工作台助手');
+        expect(html).not.toContain('Android 工作台助手');
         expect(html).not.toContain('创建多根工作区');
     });
 
