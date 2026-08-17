@@ -6,28 +6,45 @@ export function buildPiChatHtml(): string {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  body { margin: 0; height: 100vh; display: flex; flex-direction: column; font-family: var(--vscode-font-family); }
+  body { margin: 0; height: 100vh; display: flex; flex-direction: column; font-family: var(--vscode-font-family); -webkit-font-smoothing: antialiased; }
+  /* 滚动条：细窄圆角，贴合面板 */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--vscode-scrollbarSlider-background, rgba(127,127,127,0.4)); border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
+  ::-webkit-scrollbar-thumb:hover { background-color: var(--vscode-scrollbarSlider-hoverBackground, rgba(127,127,127,0.6)); }
+  ::-webkit-scrollbar-track { background: transparent; }
   /* 确保 hidden 属性生效（避免后续 .section 的 display:flex 覆盖） */
   [hidden] { display: none !important; }
   /* 根容器撑满窗口：welcome/chat 在内部 flex 布局，输入框固定在最底部 */
   #pi-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-  #welcome { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; gap: 10px; }
+  #welcome { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; gap: 12px; }
+  .pi-logo { width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, var(--vscode-button-background), var(--vscode-button-hoverBackground)); color: var(--vscode-button-foreground); font-size: 28px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
   .brand { font-size: 20px; font-weight: 600; }
-  .hint { color: var(--vscode-descriptionForeground); font-size: 12px; line-height: 1.7; }
+  .hint { color: var(--vscode-descriptionForeground); font-size: 12px; line-height: 1.7; max-width: 260px; }
   code { background: var(--vscode-textCodeBlock-background); padding: 1px 4px; border-radius: 3px; }
   /* 聊天区 */
   #chat { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-  #chat-title { padding: 8px 12px; font-weight: 600; border-bottom: 1px solid var(--vscode-panel-border); }
-  #chat-messages { flex: 1; overflow-y: auto; padding: 10px 12px; }
-  .msg { margin-bottom: 10px; }
-  .msg .meta { font-size: 11px; color: var(--vscode-descriptionForeground); margin-bottom: 2px; }
-  .msg .body { white-space: pre-wrap; word-break: break-word; font-size: 12px; }
-  .msg.user { background: var(--vscode-textBlockQuote-background, rgba(127,127,127,0.15)); border-radius: 4px; padding: 4px 8px; }
-  .msg.assistant .body { padding: 2px 0; }
-  .msg.system { color: var(--vscode-descriptionForeground); font-size: 11px; }
+  #chat-title { padding: 10px 12px; font-weight: 600; font-size: 13px; border-bottom: 1px solid var(--vscode-panel-border); display: flex; align-items: center; gap: 6px; }
+  #chat-title::before { content: 'π'; font-size: 12px; font-weight: 700; color: var(--vscode-button-background); }
+  #chat-messages { flex: 1; overflow-y: auto; padding: 12px 14px; }
+  .msg { margin-bottom: 12px; animation: msgIn 0.18s ease; }
+  @keyframes msgIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .msg .body { white-space: pre-wrap; word-break: break-word; font-size: 12.5px; line-height: 1.6; }
+  .msg .meta { font-size: 11px; color: var(--vscode-descriptionForeground); margin-bottom: 4px; }
+  /* 用户消息：右侧圆角气泡（Copilot 风格） */
+  .msg.user { display: flex; flex-direction: column; align-items: flex-end; }
+  .msg.user .meta { display: none; }
+  .msg.user .body { background: var(--vscode-button-background); color: var(--vscode-button-foreground); border-radius: 12px 12px 4px 12px; padding: 7px 12px; max-width: 85%; }
+  /* AI 消息：左侧 Pi 徽标 + 内容 */
+  .msg.assistant { display: flex; gap: 8px; }
+  .msg.assistant::before { content: 'π'; flex-shrink: 0; width: 22px; height: 22px; border-radius: 6px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+  .msg.assistant .meta { display: none; }
+  .msg.assistant .body { flex: 1; padding-top: 3px; }
+  /* 系统消息：居中灰色 */
+  .msg.system { text-align: center; color: var(--vscode-descriptionForeground); font-size: 11px; }
   /* 输入区：Copilot 风格（上下文区 + 多行输入 + 工具条） */
   #input-row { padding: 8px 12px 14px; }
-  #input-box { display: flex; flex-direction: column; gap: 4px; background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, transparent); border-radius: 8px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  #input-box { display: flex; flex-direction: column; gap: 4px; background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, transparent); border-radius: 8px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: border-color 0.15s, box-shadow 0.15s; }
+  #input-box:hover { border-color: var(--vscode-input-border, var(--vscode-focusBorder)); }
   #input-box:focus-within { border-color: var(--vscode-focusBorder); box-shadow: 0 0 0 1px var(--vscode-focusBorder); }
   /* 上下文选择区：选中的文件/文本 chip，可移除 */
   #context-area { display: flex; flex-wrap: wrap; gap: 4px; max-height: 64px; overflow-y: auto; }
@@ -50,6 +67,7 @@ export function buildPiChatHtml(): string {
 <body>
 <div id="pi-panel">
   <div id="welcome">
+    <div class="pi-logo">π</div>
     <div class="brand">Pi 面板</div>
     <div class="hint">右键项目目录 → 选择「会话列表」<br>即可打开或开启该目录下的 Pi 会话。</div>
     <div class="hint">当前还没有打开的会话。</div>
