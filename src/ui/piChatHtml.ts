@@ -26,14 +26,14 @@ export function buildPiChatHtml(): string {
   .msg.assistant .body { padding: 2px 0; }
   .msg.system { color: var(--vscode-descriptionForeground); font-size: 11px; }
   /* 输入区：Copilot 风格（上下文区 + 多行输入 + 工具条） */
-  #input-row { padding: 8px 12px; border-top: 1px solid var(--vscode-panel-border); }
-  #input-box { display: flex; flex-direction: column; gap: 3px; background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, transparent); padding: 8px 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  #input-row { padding: 8px 12px 14px; }
+  #input-box { display: flex; flex-direction: column; gap: 4px; background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, transparent); border-radius: 8px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
   #input-box:focus-within { border-color: var(--vscode-focusBorder); box-shadow: 0 0 0 1px var(--vscode-focusBorder); }
   /* 上下文选择区：选中的文件/文本 chip，可移除 */
   #context-area { display: flex; flex-wrap: wrap; gap: 4px; max-height: 64px; overflow-y: auto; }
   .ctx-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--vscode-badge-background, rgba(127,127,127,0.2)); color: var(--vscode-badge-foreground, var(--vscode-foreground)); padding: 2px 8px; font-size: 11px; max-width: 220px; }
   .ctx-chip .ctx-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  #input { flex: 1; border: none; outline: none; background: transparent; color: var(--vscode-input-foreground); resize: none; font-family: var(--vscode-font-family); font-size: 13px; line-height: 1.5; max-height: 120px; padding: 4px 2px; }
+  #input { flex: 1; min-height: 32px; border: none; outline: none; background: transparent; color: var(--vscode-input-foreground); resize: none; font-family: var(--vscode-font-family); font-size: 13px; line-height: 1.5; max-height: 120px; padding: 6px 2px; }
   /* 工具条：+ Agent 模型 思考 工具 … 语音 ↑ */
   #toolbar { display: flex; align-items: center; gap: 3px; }
   .tb-btn { width: 26px; height: 26px; border: none; border-radius: 6px; background: transparent; color: var(--vscode-descriptionForeground); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; }
