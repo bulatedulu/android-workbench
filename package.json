@@ -24,17 +24,17 @@
         "viewsContainers": {
             "secondarySidebar": [
                 {
-                    "id": "aiWorkbenchPi",
-                    "title": "Pi 面板",
+                    "id": "aiWorkbenchPanel",
+                    "title": "面板",
                     "icon": "media/icon.svg"
                 }
             ]
         },
         "views": {
-            "aiWorkbenchPi": [
+            "aiWorkbenchPanel": [
                 {
-                    "id": "aiWorkbench.piPanel",
-                    "name": "Pi",
+                    "id": "aiWorkbench.agentPanel",
+                    "name": "面板",
                     "type": "webview"
                 }
             ]
@@ -65,7 +65,7 @@
                 "title": "AI 工作台：查看会话列表"
             },
             {
-                "command": "aiWorkbench.piResumeLatest",
+                "command": "aiWorkbench.resumeLatest",
                 "title": "打开最近会话",
                 "icon": "$(history)"
             }
@@ -79,7 +79,7 @@
             ],
             "explorer/context": [
                 {
-                    "command": "aiWorkbench.piResumeLatest",
+                    "command": "aiWorkbench.resumeLatest",
                     "when": "explorerResourceIsFolder",
                     "group": "navigation"
                 }

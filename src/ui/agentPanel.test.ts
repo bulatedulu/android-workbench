@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as vscode from 'vscode';
-import { registerPiPanel, openPiPanel, openLatestSession } from './piPanel';
+import { registerAgentPanel, openAgentPanel, openLatestSession } from './agentPanel';
 import { WorkbenchService } from '../domain/workbench';
 import { AgentProvider } from '../agent/provider';
 import { PiRpcClient } from '../agent/piRpcClient';
@@ -83,31 +83,31 @@ function captureView(): {
     };
 }
 
-describe('registerPiPanel', () => {
+describe('registerAgentPanel', () => {
     beforeEach(() => {
         mocks.registerWebviewViewProvider.mockClear();
         mocks.executeCommand.mockClear();
     });
 
-    it('以 Pi 视图 id 注册 WebviewViewProvider，resolve 时渲染欢迎 HTML 并启用脚本', () => {
+    it('以面板视图 id 注册 WebviewViewProvider，resolve 时渲染欢迎 HTML 并启用脚本', () => {
         const { provider } = makeProvider();
         const { rpc } = makeRpc();
-        registerPiPanel(makeContext(), provider, rpc);
+        registerAgentPanel(makeContext(), provider, rpc);
         expect(mocks.registerWebviewViewProvider).toHaveBeenCalledWith(
-            'aiWorkbench.piPanel',
+            'aiWorkbench.agentPanel',
             expect.any(Object),
             expect.anything()
         );
         const { view } = captureView();
         expect(view.webview.options).toEqual({ enableScripts: true });
-        expect(view.webview.html).toContain('Pi 面板');
+        expect(view.webview.html).toContain('面板');
         expect(view.webview.html).toContain('会话列表');
     });
 
     it('resolve 后注册消息监听，webview 消息转发给控制器（无会话时发提示）', () => {
         const { provider } = makeProvider();
         const { rpc, prompt } = makeRpc();
-        registerPiPanel(makeContext(), provider, rpc);
+        registerAgentPanel(makeContext(), provider, rpc);
         const { view } = captureView();
 
         const handler = view.webview.onDidReceiveMessage.mock.calls[0][0] as (raw: unknown) => void;
@@ -120,14 +120,14 @@ describe('registerPiPanel', () => {
     });
 });
 
-describe('openPiPanel', () => {
+describe('openAgentPanel', () => {
     beforeEach(() => {
         mocks.executeCommand.mockClear();
     });
 
     it('执行视图 focus 命令', async () => {
-        await openPiPanel();
-        expect(mocks.executeCommand).toHaveBeenCalledWith('aiWorkbench.piPanel.focus');
+        await openAgentPanel();
+        expect(mocks.executeCommand).toHaveBeenCalledWith('aiWorkbench.agentPanel.focus');
     });
 });
 
@@ -140,7 +140,7 @@ describe('openLatestSession', () => {
     it('有历史会话时 resume 最新一个', async () => {
         const { provider } = makeProvider();
         const { rpc } = makeRpc();
-        registerPiPanel(makeContext(), provider, rpc);
+        registerAgentPanel(makeContext(), provider, rpc);
         const { view } = captureView();
         const sessions = [
             makeSession({ title: '旧', updatedAt: 100 }),
@@ -158,7 +158,7 @@ describe('openLatestSession', () => {
     it('无历史会话时开启新会话', async () => {
         const { provider } = makeProvider();
         const { rpc } = makeRpc();
-        registerPiPanel(makeContext(), provider, rpc);
+        registerAgentPanel(makeContext(), provider, rpc);
         const { view } = captureView();
         const service = { listSessionsUnderFolder: vi.fn(() => []) } as unknown as WorkbenchService;
 

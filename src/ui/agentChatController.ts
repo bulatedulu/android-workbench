@@ -3,21 +3,21 @@ import { Session } from '../domain/session';
 import { AgentProvider } from '../agent/provider';
 import { PiRpcClient, CancellationToken } from '../agent/piRpcClient';
 import { formatTime } from './format';
-import { fixedSessionId } from './piSessionPicker';
+import { fixedSessionId } from './agentSessionPicker';
 
-/** Pi 面板宿主抽象：向 webview 发消息。 */
-export interface PiChatHost {
+/** 面板宿主抽象：向 webview 发消息。 */
+export interface AgentChatHost {
     post(message: unknown): void;
 }
 
 /** 宿主 → Webview 的消息（判别联合）。 */
-export type PiChatHostMessage =
+export type AgentChatHostMessage =
     | { type: 'session'; title: string; messages: { role: string; text: string; time: string }[] }
     | { type: 'chat'; role: 'user' | 'assistant' | 'system'; text: string }
     | { type: 'chatEnd' };
 
 /** Webview → 宿主的消息（判别联合）。 */
-export type PiChatViewMessage = { type: 'send'; text: string } | { type: 'abort' } | { type: 'ready' };
+export type AgentChatViewMessage = { type: 'send'; text: string } | { type: 'abort' } | { type: 'ready' };
 
 /** 简单取消令牌（供 pi RPC 取消，形状与 CancellationToken 一致）。 */
 class SimpleCancellationToken implements CancellationToken {
@@ -42,17 +42,17 @@ class SimpleCancellationToken implements CancellationToken {
 }
 
 /**
- * Pi 面板控制器：加载会话历史 / 开启新会话，并通过 PiRpcClient 驱动 pi 对话
+ * 面板控制器：加载会话历史 / 开启新会话，并通过 PiRpcClient 驱动 pi 对话
  * （流式增量转发、取消、错误提示）。
  */
-export class PiChatController {
+export class AgentChatController {
     private currentSession: Session | undefined;
     private pendingNewFolder: string | undefined;
     private pendingSessionId: string | undefined;
     private currentToken: SimpleCancellationToken | undefined;
 
     constructor(
-        private readonly host: PiChatHost,
+        private readonly host: AgentChatHost,
         private readonly provider: AgentProvider,
         private readonly rpc: PiRpcClient
     ) { }
@@ -63,7 +63,7 @@ export class PiChatController {
         this.pendingNewFolder = undefined;
         this.pendingSessionId = undefined;
         const content = this.provider.readSessionContent(session);
-        const message: PiChatHostMessage = {
+        const message: AgentChatHostMessage = {
             type: 'session',
             title: session.title,
             messages: content.messages.map((m) => ({
@@ -80,7 +80,7 @@ export class PiChatController {
         this.currentSession = undefined;
         this.pendingNewFolder = folderPath;
         this.pendingSessionId = fixedSessionId(folderPath);
-        const message: PiChatHostMessage = {
+        const message: AgentChatHostMessage = {
             type: 'session',
             title: basename(folderPath),
             messages: []
@@ -93,7 +93,7 @@ export class PiChatController {
         if (!message || typeof message !== 'object') {
             return;
         }
-        const msg = message as PiChatViewMessage;
+        const msg = message as AgentChatViewMessage;
         switch (msg.type) {
             case 'send': {
                 const text = (msg.text ?? '').trim();

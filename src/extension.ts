@@ -11,7 +11,7 @@ import { openWorkspaceWizard } from './ui/workspaceWizard';
 import { openAssistantFullscreen, toggleAssistantFullscreen } from './ui/assistantPanel';
 import { registerExplorerSessionList } from './ui/explorerSessions';
 import { registerChatParticipant } from './ui/chatParticipant';
-import { registerPiPanel, openLatestSession } from './ui/piPanel';
+import { registerAgentPanel, openLatestSession } from './ui/agentPanel';
 export function activate(context: vscode.ExtensionContext): void {
     // 未信任工作区（受限模式）时自动打开官方信任管理窗口（onStartupFinished 保证受限模式也激活）
     if (!vscode.workspace.isTrusted) {
@@ -26,7 +26,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     registerExplorerSessionList(context, service, provider);
     registerChatParticipant(context, service, provider);
-    registerPiPanel(context, provider, rpc);
+    registerAgentPanel(context, provider, rpc);
 
     context.subscriptions.push(
         vscode.commands.registerCommand('aiWorkbench.openSession', (session: Session) => {
@@ -46,7 +46,7 @@ export function activate(context: vscode.ExtensionContext): void {
             toggleAssistantFullscreen(context);
         }),
         // 资源管理器右键「打开最近会话」→ 面板 resume 最新会话或打开空会话
-        vscode.commands.registerCommand('aiWorkbench.piResumeLatest', (uri?: vscode.Uri) => {
+        vscode.commands.registerCommand('aiWorkbench.resumeLatest', (uri?: vscode.Uri) => {
             if (uri) {
                 void openLatestSession(uri.fsPath, service);
             }

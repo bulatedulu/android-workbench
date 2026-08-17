@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import { basename } from 'node:path';
-import { PiChatController } from './piChatController';
+import { AgentChatController } from './agentChatController';
 import { Session, SessionContent } from '../domain/session';
 import { AgentProvider } from '../agent/provider';
 import { PiRpcClient } from '../agent/piRpcClient';
-import { fixedSessionId } from './piSessionPicker';
+import { fixedSessionId } from './agentSessionPicker';
 
 function makeSession(): Session {
     return {
@@ -44,11 +44,11 @@ function makeController() {
     const { provider } = makeProvider({ messages: [] });
     const { host, posted } = makeHost();
     const { rpc, prompt } = makeRpc();
-    const controller = new PiChatController(host, provider, rpc);
+    const controller = new AgentChatController(host, provider, rpc);
     return { controller, host, posted, prompt };
 }
 
-describe('PiChatController.showSession', () => {
+describe('AgentChatController.showSession', () => {
     it('读取会话历史并通过 host 发送 session 消息（含标题与消息映射）', () => {
         const session = makeSession();
         const { provider, readSessionContent } = makeProvider({
@@ -59,7 +59,7 @@ describe('PiChatController.showSession', () => {
         });
         const { host, posted } = makeHost();
         const { rpc } = makeRpc();
-        const controller = new PiChatController(host, provider, rpc);
+        const controller = new AgentChatController(host, provider, rpc);
 
         controller.showSession(session);
 
@@ -78,7 +78,7 @@ describe('PiChatController.showSession', () => {
         const { provider } = makeProvider({ messages: [] });
         const { host } = makeHost();
         const { rpc } = makeRpc();
-        const controller = new PiChatController(host, provider, rpc);
+        const controller = new AgentChatController(host, provider, rpc);
 
         controller.showSession(session);
 
@@ -86,12 +86,12 @@ describe('PiChatController.showSession', () => {
     });
 });
 
-describe('PiChatController.showNewSession', () => {
+describe('AgentChatController.showNewSession', () => {
     it('开启新会话：空消息列表、标题为目录名，并记录固定会话 id', () => {
         const { provider } = makeProvider({ messages: [] });
         const { host, posted } = makeHost();
         const { rpc } = makeRpc();
-        const controller = new PiChatController(host, provider, rpc);
+        const controller = new AgentChatController(host, provider, rpc);
 
         controller.showNewSession('C:/bug1');
 
@@ -105,13 +105,13 @@ describe('PiChatController.showNewSession', () => {
     });
 });
 
-describe('PiChatController 对话', () => {
+describe('AgentChatController 对话', () => {
     it('发送消息：历史会话用 --session 续写，且不重复回显用户消息', () => {
         const session = makeSession();
         const { provider } = makeProvider({ messages: [] });
         const { host, posted } = makeHost();
         const { rpc, prompt } = makeRpc();
-        const controller = new PiChatController(host, provider, rpc);
+        const controller = new AgentChatController(host, provider, rpc);
         controller.showSession(session);
 
         controller.handleMessage({ type: 'send', text: '帮我看看' });

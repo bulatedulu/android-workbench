@@ -1,5 +1,5 @@
-/** 构建 Pi 面板 HTML（纯函数，便于测试）：欢迎/空状态 + 隐藏聊天区（渲染会话历史）。 */
-export function buildPiChatHtml(): string {
+/** 构建面板 HTML（纯函数，便于测试）：欢迎/空状态 + 隐藏聊天区（渲染会话历史）。 */
+export function buildAgentChatHtml(): string {
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -15,7 +15,7 @@ export function buildPiChatHtml(): string {
   /* 确保 hidden 属性生效（避免后续 .section 的 display:flex 覆盖） */
   [hidden] { display: none !important; }
   /* 根容器撑满窗口：welcome/chat 在内部 flex 布局，输入框固定在最底部 */
-  #pi-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  #agent-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   #welcome { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; gap: 12px; }
   .pi-logo { width: 52px; height: 52px; border-radius: 14px; background: var(--vscode-textBlockQuote-background, rgba(127,127,127,0.15)); color: var(--vscode-descriptionForeground); font-size: 26px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
   .brand { font-size: 20px; font-weight: 600; }
@@ -62,10 +62,10 @@ export function buildPiChatHtml(): string {
 </style>
 </head>
 <body>
-<div id="pi-panel">
+<div id="agent-panel">
   <div id="welcome">
     <div class="pi-logo">π</div>
-    <div class="brand">Pi 面板</div>
+    <div class="brand">面板</div>
     <div class="hint">右键项目目录 → 选择「会话列表」<br>即可打开或开启该目录下的 Pi 会话。</div>
     <div class="hint">当前还没有打开的会话。</div>
   </div>

@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
     ),
     registerExplorerSessionList: vi.fn(),
     registerChatParticipant: vi.fn(),
-    registerPiPanel: vi.fn()
+    registerAgentPanel: vi.fn()
 }));
 
 vi.mock('vscode', () => ({
@@ -25,8 +25,8 @@ vi.mock('./ui/workspaceWizard', () => ({ openWorkspaceWizard: vi.fn() }));
 vi.mock('./ui/assistantPanel', () => ({ openAssistantFullscreen: vi.fn(), toggleAssistantFullscreen: vi.fn() }));
 vi.mock('./ui/explorerSessions', () => ({ registerExplorerSessionList: mocks.registerExplorerSessionList }));
 vi.mock('./ui/chatParticipant', () => ({ registerChatParticipant: mocks.registerChatParticipant }));
-vi.mock('./ui/piPanel', () => ({
-    registerPiPanel: mocks.registerPiPanel,
+vi.mock('./ui/agentPanel', () => ({
+    registerAgentPanel: mocks.registerAgentPanel,
     openLatestSession: vi.fn()
 }));
 
@@ -46,19 +46,19 @@ describe('activate', () => {
         }
     });
 
-    it('注册 Pi 面板视图提供者', () => {
+    it('注册面板视图提供者', () => {
         activate(makeContext());
-        expect(mocks.registerPiPanel).toHaveBeenCalledWith(
+        expect(mocks.registerAgentPanel).toHaveBeenCalledWith(
             expect.any(Object),
             expect.any(Object),
             expect.any(Object)
         );
     });
 
-    it('注册 Pi 面板「打开最近会话」命令与既有工作台命令', () => {
+    it('注册面板「打开最近会话」命令与既有工作台命令', () => {
         activate(makeContext());
         const ids = mocks.registerCommand.mock.calls.map((c) => c[0]);
-        expect(ids).toContain('aiWorkbench.piResumeLatest');
+        expect(ids).toContain('aiWorkbench.resumeLatest');
         expect(ids).toContain('aiWorkbench.toggleFullscreen');
         expect(ids).toContain('aiWorkbench.openAssistant');
         expect(ids).toContain('aiWorkbench.createWorkspace');

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fixedSessionId } from './piSessionPicker';
+import { fixedSessionId } from './agentSessionPicker';
 
 describe('fixedSessionId', () => {
     it('同一目录路径生成相同 id（确定性）', () => {
