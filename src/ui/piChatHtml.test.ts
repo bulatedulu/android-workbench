@@ -32,6 +32,12 @@ describe('buildPiChatHtml', () => {
         expect(html).toContain('renderSession');
     });
 
+    it('根容器撑满窗口（flex 布局），输入框固定在面板底部', () => {
+        const html = buildPiChatHtml();
+        expect(html).toContain('#pi-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }');
+        expect(html).toContain('#chat-messages { flex: 1; overflow-y: auto;');
+    });
+
     it('会话历史消息渲染使用 textContent（防注入）', () => {
         const html = buildPiChatHtml();
         expect(html).toContain('body.textContent');

@@ -9,6 +9,8 @@ export function buildPiChatHtml(): string {
   body { margin: 0; height: 100vh; display: flex; flex-direction: column; font-family: var(--vscode-font-family); }
   /* 确保 hidden 属性生效（避免后续 .section 的 display:flex 覆盖） */
   [hidden] { display: none !important; }
+  /* 根容器撑满窗口：welcome/chat 在内部 flex 布局，输入框固定在最底部 */
+  #pi-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   #welcome { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; gap: 10px; }
   .brand { font-size: 20px; font-weight: 600; }
   .hint { color: var(--vscode-descriptionForeground); font-size: 12px; line-height: 1.7; }
