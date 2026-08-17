@@ -36,9 +36,9 @@ export function buildPiChatHtml(): string {
   #input { flex: 1; border: none; outline: none; background: transparent; color: var(--vscode-input-foreground); resize: none; font-family: var(--vscode-font-family); font-size: 13px; line-height: 1.5; max-height: 120px; padding: 4px 2px; }
   /* 工具条：+ Agent 模型 思考 工具 … 语音 ↑ */
   #toolbar { display: flex; align-items: center; gap: 3px; }
-  .tb-btn { width: 26px; height: 26px; border: none; background: transparent; color: var(--vscode-descriptionForeground); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .tb-btn { width: 26px; height: 26px; border: none; border-radius: 6px; background: transparent; color: var(--vscode-descriptionForeground); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; }
   .tb-btn:hover { background: var(--vscode-toolbar-hoverBackground, rgba(127,127,127,0.2)); }
-  .chip { display: inline-flex; align-items: center; gap: 4px; background: transparent; color: var(--vscode-descriptionForeground); padding: 2px 6px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; background: transparent; color: var(--vscode-descriptionForeground); padding: 2px 6px; font-size: 11px; cursor: pointer; white-space: nowrap; }
   .chip:hover { color: var(--vscode-foreground); background: var(--vscode-toolbar-hoverBackground, rgba(127,127,127,0.15)); }
   .tb-spacer { flex: 1; }
   #send, #abort { width: 28px; height: 28px; min-width: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; background: var(--vscode-button-background); color: var(--vscode-button-foreground); transition: opacity 0.15s; }
