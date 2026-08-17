@@ -27,23 +27,24 @@ export function buildPiChatHtml(): string {
   .msg.system { color: var(--vscode-descriptionForeground); font-size: 11px; }
   /* 输入区：Copilot 风格（上下文区 + 多行输入 + 工具条） */
   #input-row { padding: 8px 12px; border-top: 1px solid var(--vscode-panel-border); }
-  #input-box { display: flex; flex-direction: column; gap: 2px; background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, transparent); border-radius: 10px; padding: 6px 8px; }
-  #input-box:focus-within { border-color: var(--vscode-focusBorder); }
+  #input-box { display: flex; flex-direction: column; gap: 3px; background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, transparent); border-radius: 12px; padding: 8px 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  #input-box:focus-within { border-color: var(--vscode-focusBorder); box-shadow: 0 0 0 1px var(--vscode-focusBorder); }
   /* 上下文选择区：选中的文件/文本 chip，可移除 */
   #context-area { display: flex; flex-wrap: wrap; gap: 4px; max-height: 64px; overflow-y: auto; }
   .ctx-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--vscode-badge-background, rgba(127,127,127,0.2)); color: var(--vscode-badge-foreground, var(--vscode-foreground)); border-radius: 6px; padding: 2px 8px; font-size: 11px; max-width: 220px; }
   .ctx-chip .ctx-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  #input { flex: 1; border: none; outline: none; background: transparent; color: var(--vscode-input-foreground); resize: none; font-family: var(--vscode-font-family); font-size: 12px; line-height: 1.4; max-height: 120px; padding: 4px 2px; }
-  /* 工具条：+ Agent 模型 思考 工具 … 麦 ↑ */
-  #toolbar { display: flex; align-items: center; gap: 2px; }
-  .tb-btn { width: 24px; height: 24px; border: none; background: transparent; color: var(--vscode-descriptionForeground); border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  #input { flex: 1; border: none; outline: none; background: transparent; color: var(--vscode-input-foreground); resize: none; font-family: var(--vscode-font-family); font-size: 13px; line-height: 1.5; max-height: 120px; padding: 4px 2px; }
+  /* 工具条：+ Agent 模型 思考 工具 … 语音 ↑ */
+  #toolbar { display: flex; align-items: center; gap: 3px; }
+  .tb-btn { width: 26px; height: 26px; border: none; background: transparent; color: var(--vscode-descriptionForeground); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; }
   .tb-btn:hover { background: var(--vscode-toolbar-hoverBackground, rgba(127,127,127,0.2)); }
-  .chip { display: inline-flex; align-items: center; gap: 4px; background: transparent; border: 1px solid var(--vscode-input-border, rgba(127,127,127,0.3)); color: var(--vscode-descriptionForeground); border-radius: 999px; padding: 1px 8px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; background: transparent; border: 1px solid var(--vscode-input-border, rgba(127,127,127,0.3)); color: var(--vscode-descriptionForeground); border-radius: 999px; padding: 2px 10px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+  .chip:hover { border-color: var(--vscode-focusBorder); }
   .tb-spacer { flex: 1; }
-  #send, #abort { width: 26px; height: 26px; min-width: 26px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
-  #send:disabled { opacity: 0.45; cursor: default; }
-  #send::before { content: '↑'; font-size: 16px; font-weight: 600; }
-  #abort::before { content: '■'; font-size: 12px; }
+  #send, #abort { width: 28px; height: 28px; min-width: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; background: var(--vscode-button-background); color: var(--vscode-button-foreground); transition: opacity 0.15s; }
+  #send:disabled { opacity: 0.4; cursor: default; }
+  #send::before { content: '↑'; font-size: 17px; font-weight: 700; }
+  #abort::before { content: '■'; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -63,11 +64,11 @@ export function buildPiChatHtml(): string {
         <div id="toolbar">
           <button class="tb-btn" id="add-context" title="添加上下文（暂未支持）">＋</button>
           <span class="chip" id="agent-chip" title="Agent（暂未支持）">Agent: pi</span>
-          <span class="chip" id="model-chip" title="模型（暂未支持）">模型: 默认</span>
-          <span class="chip" id="thinking-chip" title="思考等级（暂未支持）">思考: off</span>
+          <span class="chip" id="model-chip" title="模型（暂未支持）">默认</span>
+          <span class="chip" id="thinking-chip" title="思考等级（暂未支持）">off</span>
           <button class="tb-btn" id="tools-btn" title="工具列表（暂未支持）">⚙</button>
           <div class="tb-spacer"></div>
-          <button class="tb-btn" id="mic-btn" title="语音输入（暂未支持）">🎤</button>
+          <button class="tb-btn" id="mic-btn" title="语音输入（暂未支持）">🎙</button>
           <button id="send" title="发送" disabled></button>
           <button id="abort" title="停止生成" hidden></button>
         </div>

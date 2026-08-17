@@ -59,7 +59,7 @@ describe('buildPiChatHtml', () => {
         expect(html).toContain('sendBtn.disabled = !input.value.trim()');
     });
 
-    it('输入框含上下文选择区与工具条（+ Agent 模型 思考 工具 麦 ↑）', () => {
+    it('输入框含上下文选择区与工具条（+ Agent 模型 思考 工具 语音 ↑）', () => {
         const html = buildPiChatHtml();
         expect(html).toContain('id="context-area"');
         expect(html).toContain('id="add-context"');
@@ -69,6 +69,15 @@ describe('buildPiChatHtml', () => {
         expect(html).toContain('id="tools-btn"');
         expect(html).toContain('id="mic-btn"');
         expect(html).toContain('id="toolbar"');
+    });
+
+    it('模型/思考等级 chip 直接显示值（无「模型:」「思考:」前缀），语音用录音图标', () => {
+        const html = buildPiChatHtml();
+        expect(html).toContain('id="model-chip" title="模型（暂未支持）">默认<');
+        expect(html).toContain('id="thinking-chip" title="思考等级（暂未支持）">off<');
+        expect(html).not.toContain('模型: 默认');
+        expect(html).not.toContain('思考: off');
+        expect(html).toContain('id="mic-btn" title="语音输入（暂未支持）">🎙<');
     });
 
     it('生成中隐藏发送按钮、显示停止按钮（updateButtons）', () => {
