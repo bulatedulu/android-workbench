@@ -38,8 +38,8 @@ export function buildPiChatHtml(): string {
   #toolbar { display: flex; align-items: center; gap: 3px; }
   .tb-btn { width: 26px; height: 26px; border: none; background: transparent; color: var(--vscode-descriptionForeground); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; }
   .tb-btn:hover { background: var(--vscode-toolbar-hoverBackground, rgba(127,127,127,0.2)); }
-  .chip { display: inline-flex; align-items: center; gap: 4px; background: transparent; border: 1px solid var(--vscode-input-border, rgba(127,127,127,0.3)); color: var(--vscode-descriptionForeground); padding: 2px 10px; font-size: 11px; cursor: pointer; white-space: nowrap; }
-  .chip:hover { border-color: var(--vscode-focusBorder); }
+  .chip { display: inline-flex; align-items: center; gap: 4px; background: transparent; color: var(--vscode-descriptionForeground); padding: 2px 6px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+  .chip:hover { color: var(--vscode-foreground); background: var(--vscode-toolbar-hoverBackground, rgba(127,127,127,0.15)); }
   .tb-spacer { flex: 1; }
   #send, #abort { width: 28px; height: 28px; min-width: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; background: var(--vscode-button-background); color: var(--vscode-button-foreground); transition: opacity 0.15s; }
   #send:disabled { opacity: 0.4; cursor: default; }
