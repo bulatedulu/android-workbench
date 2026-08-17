@@ -57,7 +57,18 @@ describe('buildPiChatHtml', () => {
         expect(html).toContain("e.key === 'Enter' && !e.shiftKey");
         expect(html).toContain('scrollHeight');
         expect(html).toContain('sendBtn.disabled = !input.value.trim()');
-        expect(html).toContain('Enter 发送 · Shift+Enter 换行');
+    });
+
+    it('输入框含上下文选择区与工具条（+ Agent 模型 思考 工具 麦 ↑）', () => {
+        const html = buildPiChatHtml();
+        expect(html).toContain('id="context-area"');
+        expect(html).toContain('id="add-context"');
+        expect(html).toContain('id="agent-chip"');
+        expect(html).toContain('id="model-chip"');
+        expect(html).toContain('id="thinking-chip"');
+        expect(html).toContain('id="tools-btn"');
+        expect(html).toContain('id="mic-btn"');
+        expect(html).toContain('id="toolbar"');
     });
 
     it('生成中隐藏发送按钮、显示停止按钮（updateButtons）', () => {
