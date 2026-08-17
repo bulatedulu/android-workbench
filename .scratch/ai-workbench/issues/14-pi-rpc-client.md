@@ -4,14 +4,18 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] 注入 spawn 工厂，可用假子进程测试
-- [ ] 启动参数正确：`--mode rpc` + 会话参数（`--session <file>` 或 `--session-id <id>`）+ 项目目录作为 cwd；Windows 下能正确启动 pi（shell 兼容）
-- [ ] stdin 发送 `{id, type: 'prompt', message}` 触发对话
-- [ ] stdout 逐行解析：`text_delta` 增量流式回调；`response.success=false` 报错；`agent_end`/`agent_settled` 结束
-- [ ] `extension_ui_request`（select/confirm/input/editor）自动回 `cancelled: true`，不阻塞
-- [ ] 取消：发送 abort，超时后 kill；尊重取消令牌
-- [ ] 进程异常退出/未安装 pi 时有明确错误
-- [ ] 假子进程单测覆盖上述全部场景（不真跑 pi）
-- [ ] typecheck / 全量测试 / 构建通过
+- [x] 注入 spawn 工厂，可用假子进程测试
+- [x] 启动参数正确：`--mode rpc` + 会话参数（`--session <file>` 或 `--session-id <id>`）+ 项目目录作为 cwd；Windows 下能正确启动 pi（shell 兼容）
+- [x] stdin 发送 `{id, type: 'prompt', message}` 触发对话
+- [x] stdout 逐行解析：`text_delta` 增量流式回调；`response.success=false` 报错；`agent_end`/`agent_settled` 结束
+- [x] `extension_ui_request`（select/confirm/input/editor）自动回 `cancelled: true`，不阻塞
+- [x] 取消：发送 abort，超时后 kill；尊重取消令牌
+- [x] 进程异常退出/未安装 pi 时有明确错误
+- [x] 假子进程单测覆盖上述全部场景（不真跑 pi）
+- [x] typecheck / 全量测试 / 构建通过
+
+## Comments
+- 2026-08-18 完成，提交 `edb78d8`。
+- 审查修复：`agent_settled` 结束覆盖、预取消 token、`sawEnd` 防「对话结束仍非零退出」误报、结束关闭 stdin 防进程残留。
