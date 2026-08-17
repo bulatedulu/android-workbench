@@ -45,6 +45,21 @@ describe('buildPiChatHtml', () => {
         expect(html).toContain('id="abort"');
     });
 
+    it('输入框为多行 textarea：自动增高、Enter 发送、Shift+Enter 换行、空内容禁用发送', () => {
+        const html = buildPiChatHtml();
+        expect(html).toContain('<textarea id="input"');
+        expect(html).toContain("e.key === 'Enter' && !e.shiftKey");
+        expect(html).toContain('scrollHeight');
+        expect(html).toContain('sendBtn.disabled = !input.value.trim()');
+        expect(html).toContain('Enter 发送 · Shift+Enter 换行');
+    });
+
+    it('生成中隐藏发送按钮、显示停止按钮（updateButtons）', () => {
+        const html = buildPiChatHtml();
+        expect(html).toContain('sendBtn.hidden = streaming');
+        expect(html).toContain('abortBtn.hidden = !streaming');
+    });
+
     it('脚本支持发送消息与取消（postMessage send/abort，含 Esc）', () => {
         const html = buildPiChatHtml();
         expect(html).toContain("vscode.postMessage({ type: 'send'");

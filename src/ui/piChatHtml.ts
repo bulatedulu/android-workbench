@@ -23,8 +23,16 @@ export function buildPiChatHtml(): string {
   .msg.user { background: var(--vscode-textBlockQuote-background, rgba(127,127,127,0.15)); border-radius: 4px; padding: 4px 8px; }
   .msg.assistant .body { padding: 2px 0; }
   .msg.system { color: var(--vscode-descriptionForeground); font-size: 11px; }
-  #input-row { display: flex; gap: 6px; padding: 8px 12px; border-top: 1px solid var(--vscode-panel-border); }
-  #input { flex: 1; padding: 5px 6px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border, transparent); }
+  /* 输入区：Copilot 风格（多行 textarea + 圆形发送/停止） */
+  #input-row { padding: 8px 12px; border-top: 1px solid var(--vscode-panel-border); }
+  #input-box { display: flex; align-items: flex-end; gap: 4px; background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, transparent); border-radius: 8px; padding: 4px 6px; }
+  #input-box:focus-within { border-color: var(--vscode-focusBorder); }
+  #input { flex: 1; border: none; outline: none; background: transparent; color: var(--vscode-input-foreground); resize: none; font-family: var(--vscode-font-family); font-size: 12px; line-height: 1.4; max-height: 120px; padding: 4px 2px; }
+  #send, #abort { width: 26px; height: 26px; min-width: 26px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
+  #send:disabled { opacity: 0.45; cursor: default; }
+  #send::before { content: '↑'; font-size: 16px; font-weight: 600; }
+  #abort::before { content: '■'; font-size: 12px; }
+  #input-hint { font-size: 10px; color: var(--vscode-descriptionForeground); padding: 4px 2px 0; }
 </style>
 </head>
 <body>
@@ -38,16 +46,36 @@ export function buildPiChatHtml(): string {
     <div id="chat-title"></div>
     <div id="chat-messages"></div>
     <div id="input-row">
-      <input id="input" placeholder="输入消息，Enter 发送…">
-      <button id="send">发送</button>
-      <button id="abort" title="停止生成">停止</button>
+      <div id="input-box">
+        <textarea id="input" rows="1" placeholder="输入消息，Enter 发送…"></textarea>
+        <button id="send" title="发送" disabled></button>
+        <button id="abort" title="停止生成" hidden></button>
+      </div>
+      <div id="input-hint">Enter 发送 · Shift+Enter 换行</div>
     </div>
   </div>
 </div>
 <script>
   const vscode = acquireVsCodeApi();
+  // 流式状态：assistant 增量追加到同一条消息，直到 chatEnd 或 user/system 消息打断
+  let streaming = false;
+  const input = document.getElementById('input');
+  const sendBtn = document.getElementById('send');
+  const abortBtn = document.getElementById('abort');
+  // 多行自动增高 + 空内容禁用发送
+  const autosize = () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+    sendBtn.disabled = !input.value.trim();
+  };
+  // 生成中：隐藏发送、显示停止
+  const updateButtons = () => {
+    sendBtn.hidden = streaming;
+    abortBtn.hidden = !streaming;
+  };
   const renderSession = (data) => {
     streaming = false;
+    updateButtons();
     document.getElementById('chat-title').textContent = data.title || '';
     const list = document.getElementById('chat-messages');
     list.textContent = '';
@@ -67,8 +95,6 @@ export function buildPiChatHtml(): string {
     document.getElementById('welcome').hidden = true;
     document.getElementById('chat').hidden = false;
   };
-  // 流式状态：assistant 增量追加到同一条消息，直到 chatEnd 或 user/system 消息打断
-  let streaming = false;
   const appendChat = (role, text) => {
     if (role === 'system' || role === 'user') streaming = false;
     const list = document.getElementById('chat-messages');
@@ -92,27 +118,31 @@ export function buildPiChatHtml(): string {
     list.appendChild(group);
     if (role === 'assistant') streaming = true;
     list.scrollTop = list.scrollHeight;
+    updateButtons();
   };
   const sendChat = () => {
-    const input = document.getElementById('input');
     const text = input.value.trim();
     if (!text) return;
     appendChat('user', text);
     vscode.postMessage({ type: 'send', text });
     input.value = '';
+    autosize();
   };
-  document.getElementById('send').addEventListener('click', sendChat);
-  document.getElementById('abort').addEventListener('click', () => vscode.postMessage({ type: 'abort' }));
-  document.getElementById('input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); sendChat(); }
+  input.addEventListener('input', autosize);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
     else if (e.key === 'Escape') { vscode.postMessage({ type: 'abort' }); }
   });
+  sendBtn.addEventListener('click', sendChat);
+  abortBtn.addEventListener('click', () => vscode.postMessage({ type: 'abort' }));
+  autosize();
+  updateButtons();
   window.addEventListener('message', (e) => {
     const msg = e.data;
     if (!msg) return;
     if (msg.type === 'session') renderSession(msg);
     else if (msg.type === 'chat') appendChat(msg.role, msg.text || '');
-    else if (msg.type === 'chatEnd') streaming = false;
+    else if (msg.type === 'chatEnd') { streaming = false; updateButtons(); }
   });
   vscode.postMessage({ type: 'ready' });
 </script>
